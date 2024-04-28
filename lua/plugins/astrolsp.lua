@@ -96,6 +96,12 @@ return {
         --   desc = "Toggle LSP semantic highlight (buffer)",
         --   cond = function(client) return client.server_capabilities.semanticTokensProvider and vim.lsp.semantic_tokens end,
         -- },
+
+            -- Terminal switch
+          ["<leader>1"] = { function() require("toggleterm").exec("", 1) end, desc = "GoTo term 1" },
+          ["<leader>2"] = { function() require("toggleterm").exec("", 2) end, desc = "GoTo term 2" },
+          ["<leader>3"] = { function() require("toggleterm").exec("", 3) end, desc = "GoTo term 3" },
+          ["<leader>4"] = { function() require("toggleterm").exec("", 4) end, desc = "GoTo term 4" },
       },
     },
     -- A custom `on_attach` function to be run after the default `on_attach` function

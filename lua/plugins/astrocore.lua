@@ -64,6 +64,13 @@ return {
         ["<Leader>b"] = { desc = "Buffers" },
         -- quick save
         -- ["<C-s>"] = { ":w!<cr>", desc = "Save File" },  -- change description but the same command
+        
+        -- Terminal switch
+        ["<leader>1"] = { function() require("toggleterm").exec("", 1) end, desc = "GoTo term 1" },
+        ["<leader>2"] = { function() require("toggleterm").exec("", 2) end, desc = "GoTo term 2" },
+        ["<leader>3"] = { function() require("toggleterm").exec("", 3) end, desc = "GoTo term 3" },
+        ["<leader>4"] = { function() require("toggleterm").exec("", 4) end, desc = "GoTo term 4" },
+
       },
       t = {
         -- setting a mapping to false will disable it

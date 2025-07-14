@@ -27,6 +27,11 @@ return {
             relative = "editor",
             border = "rounded"
           }
+        },
+        keymaps = {
+          toggle = {
+            terminal = "<Esc>", -- Use escape key to toggle Claude Code terminal
+          },
         }
       })
       

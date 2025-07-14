@@ -20,7 +20,6 @@ return {
   { import = "astrocommunity.pack.go" },
   { import = "astrocommunity.pack.yaml" },
   { import = "astrocommunity.colorscheme.tokyonight-nvim" },
-  { import = "astrocommunity.project.nvim-spectre" },
-  { import = "astrocommunity.motion.harpoon" },
   { import = "astrocommunity.motion.flash-nvim" },
+  { import = "astrocommunity.motion.harpoon" },
 }

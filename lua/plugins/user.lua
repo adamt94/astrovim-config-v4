@@ -1,5 +1,3 @@
-if true then return {} end -- WARN: REMOVE THIS LINE TO ACTIVATE THIS FILE
-
 -- You can also add or configure plugins by creating files in this `plugins/` folder
 -- Here are some examples:
 
@@ -13,6 +11,16 @@ return {
     "ray-x/lsp_signature.nvim",
     event = "BufRead",
     config = function() require("lsp_signature").setup() end,
+  },
+  {
+    "greggh/claude-code.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    config = function()
+      require("claude-code").setup({
+        -- your configuration comes here
+        -- or leave it empty to use the default settings
+      })
+    end,
   },
 
   -- == Examples of Overriding Plugins ==
@@ -82,4 +90,66 @@ return {
       )
     end,
   },
+  {
+    "AstroNvim/astrocore",
+    opts = function(_, opts)
+      -- Add mappings for numbered floating terminals
+      for i = 1, 3 do
+        opts.mappings.n["<leader>t" .. i] = {
+          function() require("toggleterm").toggle(i, nil, nil, "float") end,
+          desc = "Toggle floating terminal " .. i,
+        }
+      end
+      -- Add mapping for the last used terminal
+      opts.mappings.n["<leader>tt"] = { "<cmd>ToggleTerm direction=float<cr>", desc = "Toggle last floating terminal" }
+      return opts
+    end,
+  },
+  {
+    "akinsho/toggleterm.nvim",
+    opts = {
+      -- Set floating terminal options
+      float_opts = {
+        border = "single",
+      },
+      -- Hide the terminal when it's closed
+      close_on_exit = false,
+      -- Function to run on opening a terminal
+      on_open = function(term)
+        -- Enter insert mode automatically
+        vim.cmd("startinsert!")
+        -- Map <esc> to hide the terminal, but not for lazygit
+        local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
+        if not is_lazygit_float then
+          vim.api.nvim_buf_set_keymap(
+            term.bufnr,
+            "t",
+            "<esc>",
+            string.format("<cmd>lua require('toggleterm').toggle(%d)<CR>", term.id),
+            { noremap = true, silent = true }
+          )
+        else
+          -- Map 'q' to hide the lazygit terminal
+          vim.api.nvim_buf_set_keymap(
+            term.bufnr,
+            "t",
+            "q",
+            string.format("<cmd>lua require('toggleterm').toggle(%d)<CR>", term.id),
+            { noremap = true, silent = true }
+          )
+        end
+      end,
+      on_exit = function(term)
+        -- Close the terminal buffer when lazygit exits
+        if string.find(term.cmd or "", "lazygit") then
+          term:hide()
+          vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(term.bufnr) then
+              vim.api.nvim_buf_delete(term.bufnr, { force = true })
+            end
+          end)
+        end
+      end,
+    },
+  }
 }

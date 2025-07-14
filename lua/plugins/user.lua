@@ -17,8 +17,25 @@ return {
     dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
       require("claude-code").setup({
-        -- your configuration comes here
-        -- or leave it empty to use the default settings
+        window = {
+          position = "float",
+          float = {
+            width = "90%",
+            height = "90%",
+            row = "center",
+            col = "center",
+            relative = "editor",
+            border = "rounded"
+          }
+        }
+      })
+      
+      -- Auto-close floating terminal when Claude process terminates
+      vim.api.nvim_create_autocmd("TermClose", {
+        pattern = "*claude*",
+        callback = function()
+          vim.cmd("close")
+        end,
       })
     end,
   },

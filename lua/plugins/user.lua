@@ -29,8 +29,8 @@ return {
           }
         },
         keymaps = {
-          toggle = {
-            terminal = "<Esc>", -- Use escape key to toggle Claude Code terminal
+          close = {
+            terminal = "<Esc>", -- Use escape key to close Claude Code terminal
           },
         }
       })
@@ -41,6 +41,105 @@ return {
         callback = function()
           vim.cmd("close")
         end,
+      })
+      
+      -- Override ESC key in Claude Code terminals to close the terminal
+      vim.api.nvim_create_autocmd("TermOpen", {
+        pattern = "*claude*",
+        callback = function()
+          vim.api.nvim_buf_set_keymap(0, "t", "<Esc>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
+        end,
+      })
+    end,
+  },
+  {
+    "CopilotC-Nvim/CopilotChat.nvim",
+    branch = "canary",
+    dependencies = {
+      { "zbirenbaum/copilot.lua" },
+      { "nvim-lua/plenary.nvim" },
+    },
+    config = function()
+      require("CopilotChat").setup({
+        debug = false,
+        window = {
+          layout = "float",
+          width = 0.9,
+          height = 0.9,
+          border = "rounded",
+          title = "Copilot Chat",
+        },
+        chat = {
+          welcome_message = "Hello! I'm GitHub Copilot. How can I help you today?",
+          loading_text = "Loading...",
+          question_sign = "",
+          answer_sign = "",
+          error_text = "Error: ",
+          separator = "---",
+        },
+        prompts = {
+          Explain = {
+            prompt = "/COPILOT_EXPLAIN Write an explanation for the active selection as paragraphs of text.",
+          },
+          Review = {
+            prompt = "/COPILOT_REVIEW Review the selected code.",
+          },
+          Fix = {
+            prompt = "/COPILOT_GENERATE There is a problem in this code. Rewrite the code to show it with the bug fixed.",
+          },
+          Optimize = {
+            prompt = "/COPILOT_GENERATE Optimize the selected code to improve performance and readability.",
+          },
+          Docs = {
+            prompt = "/COPILOT_GENERATE Please add documentation comment for the selection.",
+          },
+          Tests = {
+            prompt = "/COPILOT_GENERATE Please generate tests for my code.",
+          },
+          FixDiagnostic = {
+            prompt = "Please assist with the following diagnostic issue in file:",
+          },
+          Commit = {
+            prompt = "Write commit message for the change with commitizen convention. Make sure the title has maximum 50 characters and message is wrapped at 72 characters. Wrap the whole message in code block with language gitcommit.",
+          },
+          CommitStaged = {
+            prompt = "Write commit message for the change with commitizen convention. Make sure the title has maximum 50 characters and message is wrapped at 72 characters. Wrap the whole message in code block with language gitcommit.",
+          },
+        },
+        mappings = {
+          complete = {
+            detail = "Use @<Tab> or /<Tab> for options.",
+            insert = "<Tab>",
+          },
+          close = {
+            normal = "<Esc>",
+            insert = "<Esc>",
+          },
+          reset = {
+            normal = "<C-r>",
+            insert = "<C-r>",
+          },
+          submit_prompt = {
+            normal = "<CR>",
+            insert = "<C-CR>",
+          },
+          accept_diff = {
+            normal = "<C-y>",
+            insert = "<C-y>",
+          },
+          yank_diff = {
+            normal = "gy",
+          },
+          show_diff = {
+            normal = "gd",
+          },
+          show_system_prompt = {
+            normal = "gp",
+          },
+          show_user_selection = {
+            normal = "gs",
+          },
+        },
       })
     end,
   },
@@ -124,6 +223,11 @@ return {
       end
       -- Add mapping for the last used terminal
       opts.mappings.n["<leader>tt"] = { "<cmd>ToggleTerm direction=float<cr>", desc = "Toggle last floating terminal" }
+      -- Add Copilot Chat keybinding
+      opts.mappings.n["<leader>cx"] = { "<cmd>CopilotChat<cr>", desc = "Open Copilot Chat" }
+      -- Add Claude Code keybindings with lowercase letters
+      opts.mappings.n["<leader>v"] = { "<cmd>ClaudeCode<cr>", desc = "Open Claude Code" }
+      opts.mappings.n["<leader>c"] = { "<cmd>ClaudeCodeChat<cr>", desc = "Claude Code Chat" }
       return opts
     end,
   },
@@ -140,9 +244,10 @@ return {
       on_open = function(term)
         -- Enter insert mode automatically
         vim.cmd("startinsert!")
-        -- Map <esc> to hide the terminal, but not for lazygit
+        -- Map <esc> to hide the terminal, but not for lazygit or claude
         local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
-        if not is_lazygit_float then
+        local is_claude_float = term.direction == "float" and string.find(term.cmd or "", "claude")
+        if not is_lazygit_float and not is_claude_float then
           vim.api.nvim_buf_set_keymap(
             term.bufnr,
             "t",

@@ -225,9 +225,10 @@ return {
       opts.mappings.n["<leader>tt"] = { "<cmd>ToggleTerm direction=float<cr>", desc = "Toggle last floating terminal" }
       -- Add Copilot Chat keybinding
       opts.mappings.n["<leader>cx"] = { "<cmd>CopilotChat<cr>", desc = "Open Copilot Chat" }
-      -- Add Claude Code keybindings with lowercase letters
-      opts.mappings.n["<leader>v"] = { "<cmd>ClaudeCode<cr>", desc = "Open Claude Code" }
-      opts.mappings.n["<leader>c"] = { "<cmd>ClaudeCodeChat<cr>", desc = "Claude Code Chat" }
+      -- Add Claude Code keybindings
+      opts.mappings.n["<leader>v"] = { "<cmd>ClaudeCode<cr>", desc = "Claude Code Toggle" }
+      opts.mappings.n["<leader>cr"] = { "<cmd>ClaudeCodeResume<cr>", desc = "Claude Code Resume" }
+      opts.mappings.n["<leader>ct"] = { "<cmd>ClaudeCodeContinue<cr>", desc = "Claude Code Continue" }
       return opts
     end,
   },

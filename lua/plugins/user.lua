@@ -38,8 +38,21 @@ return {
       -- Auto-close floating terminal when Claude process terminates
       vim.api.nvim_create_autocmd("TermClose", {
         pattern = "*claude*",
-        callback = function()
-          vim.cmd("close")
+        callback = function(args)
+          local bufnr = args.buf
+          -- Find and close the window containing this buffer
+          for _, winid in ipairs(vim.api.nvim_list_wins()) do
+            if vim.api.nvim_win_get_buf(winid) == bufnr then
+              vim.api.nvim_win_close(winid, true)
+              break
+            end
+          end
+          -- Delete the buffer to prevent naming conflicts
+          vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(bufnr) then
+              vim.api.nvim_buf_delete(bufnr, { force = true })
+            end
+          end)
         end,
       })
       
@@ -54,7 +67,7 @@ return {
   },
   {
     "CopilotC-Nvim/CopilotChat.nvim",
-    branch = "canary",
+    branch = "main",
     dependencies = {
       { "zbirenbaum/copilot.lua" },
       { "nvim-lua/plenary.nvim" },
@@ -133,10 +146,10 @@ return {
           show_diff = {
             normal = "gd",
           },
-          show_system_prompt = {
+          show_info = {
             normal = "gp",
           },
-          show_user_selection = {
+          show_context = {
             normal = "gs",
           },
         },
@@ -229,6 +242,8 @@ return {
       opts.mappings.n["<leader>v"] = { "<cmd>ClaudeCode<cr>", desc = "Claude Code Toggle" }
       opts.mappings.n["<leader>cr"] = { "<cmd>ClaudeCodeResume<cr>", desc = "Claude Code Resume" }
       opts.mappings.n["<leader>ct"] = { "<cmd>ClaudeCodeContinue<cr>", desc = "Claude Code Continue" }
+      -- Add keymap search
+      opts.mappings.n["<leader>k"] = { "<cmd>Telescope keymaps<cr>", desc = "Search all keymaps" }
       return opts
     end,
   },

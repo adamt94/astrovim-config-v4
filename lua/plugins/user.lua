@@ -228,6 +228,8 @@ return {
       -- Add Claude Code keybindings with lowercase letters
       opts.mappings.n["<leader>v"] = { "<cmd>ClaudeCode<cr>", desc = "Open Claude Code" }
       opts.mappings.n["<leader>c"] = { "<cmd>ClaudeCodeChat<cr>", desc = "Claude Code Chat" }
+      -- Add keymap search
+      opts.mappings.n["<leader>k"] = { "<cmd>Telescope keymaps<cr>", desc = "Search all keymaps" }
       return opts
     end,
   },

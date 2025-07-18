@@ -38,8 +38,21 @@ return {
       -- Auto-close floating terminal when Claude process terminates
       vim.api.nvim_create_autocmd("TermClose", {
         pattern = "*claude*",
-        callback = function()
-          vim.cmd("close")
+        callback = function(args)
+          local bufnr = args.buf
+          -- Find and close the window containing this buffer
+          for _, winid in ipairs(vim.api.nvim_list_wins()) do
+            if vim.api.nvim_win_get_buf(winid) == bufnr then
+              vim.api.nvim_win_close(winid, true)
+              break
+            end
+          end
+          -- Delete the buffer to prevent naming conflicts
+          vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(bufnr) then
+              vim.api.nvim_buf_delete(bufnr, { force = true })
+            end
+          end)
         end,
       })
       

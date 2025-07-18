@@ -49,6 +49,18 @@ Several plugin configuration files have guard clauses (`if true then return end`
 
 To enable these files, remove the guard clause at the top of each file.
 
+### Plugin Installation Priority
+When adding new plugins, follow this priority order:
+1. **AstroNvim Community**: Check `lua/community.lua` first - prefer community imports (e.g., `astrocommunity.workflow.hardtime-nvim`)
+2. **Manual Installation**: Only use `lua/plugins/user.lua` if not available in community repository
+
+### Finding Community Plugins
+To search for available community plugins:
+- Visit: https://astronvim.github.io/astrocommunity/
+- Search by category (workflow, colorscheme, pack, motion, etc.)
+- Import path format: `astrocommunity.{category}.{plugin-name}`
+- Example: `{ import = "astrocommunity.workflow.hardtime-nvim" }`
+
 ### Custom Plugin Structure
 New plugins should be added to `lua/plugins/user.lua` following the existing patterns:
 - Use LazySpec format for plugin definitions

@@ -63,6 +63,31 @@ return {
           vim.api.nvim_buf_set_keymap(0, "t", "<Esc>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
         end,
       })
+      
+      -- Close Claude Code floating terminal when clicking outside
+      vim.api.nvim_create_autocmd("WinEnter", {
+        pattern = "*",
+        callback = function()
+          local current_win = vim.api.nvim_get_current_win()
+          local current_buf = vim.api.nvim_win_get_buf(current_win)
+          local current_buf_name = vim.api.nvim_buf_get_name(current_buf)
+          
+          -- Check if we clicked outside a Claude Code terminal
+          for _, winid in ipairs(vim.api.nvim_list_wins()) do
+            if winid ~= current_win then
+              local buf = vim.api.nvim_win_get_buf(winid)
+              local buf_name = vim.api.nvim_buf_get_name(buf)
+              local win_config = vim.api.nvim_win_get_config(winid)
+              
+              -- Check if this is a floating Claude Code terminal
+              if string.find(buf_name, "claude") and win_config.relative ~= "" then
+                -- Close the Claude Code floating window
+                vim.api.nvim_win_close(winid, true)
+              end
+            end
+          end
+        end,
+      })
     end,
   },
   {
@@ -294,5 +319,14 @@ return {
         end
       end,
     },
-  }
+  },
+  
+  -- Configure hardtime plugin
+  {
+    "m4xshen/hardtime.nvim",
+    opts = {
+      hint = true,        -- Enable hint mode
+      disable_mouse = false,  -- Allow mouse usage
+    },
+  },
 }

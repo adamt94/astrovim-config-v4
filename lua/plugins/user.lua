@@ -64,7 +64,7 @@ return {
         end,
       })
       
-      -- Close Claude Code floating terminal when clicking outside
+      -- Close Claude Code and Gemini CLI floating terminals when clicking outside
       vim.api.nvim_create_autocmd("WinEnter", {
         pattern = "*",
         callback = function()
@@ -72,20 +72,49 @@ return {
           local current_buf = vim.api.nvim_win_get_buf(current_win)
           local current_buf_name = vim.api.nvim_buf_get_name(current_buf)
           
-          -- Check if we clicked outside a Claude Code terminal
+          -- Check if we clicked outside a Claude Code or Gemini CLI terminal
           for _, winid in ipairs(vim.api.nvim_list_wins()) do
             if winid ~= current_win then
               local buf = vim.api.nvim_win_get_buf(winid)
               local buf_name = vim.api.nvim_buf_get_name(buf)
               local win_config = vim.api.nvim_win_get_config(winid)
               
-              -- Check if this is a floating Claude Code terminal
-              if string.find(buf_name, "claude") and win_config.relative ~= "" then
-                -- Close the Claude Code floating window
+              -- Check if this is a floating Claude Code or Gemini CLI terminal
+              if (string.find(buf_name, "claude") or string.find(buf_name, "gemini")) and win_config.relative ~= "" then
+                -- Close the floating window
                 vim.api.nvim_win_close(winid, true)
               end
             end
           end
+        end,
+      })
+      
+      -- Auto-close floating terminal when Gemini process terminates
+      vim.api.nvim_create_autocmd("TermClose", {
+        pattern = "*gemini*",
+        callback = function(args)
+          local bufnr = args.buf
+          -- Find and close the window containing this buffer
+          for _, winid in ipairs(vim.api.nvim_list_wins()) do
+            if vim.api.nvim_win_get_buf(winid) == bufnr then
+              vim.api.nvim_win_close(winid, true)
+              break
+            end
+          end
+          -- Delete the buffer to prevent naming conflicts
+          vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(bufnr) then
+              vim.api.nvim_buf_delete(bufnr, { force = true })
+            end
+          end)
+        end,
+      })
+      
+      -- Override ESC key in Gemini CLI terminals to close the terminal
+      vim.api.nvim_create_autocmd("TermOpen", {
+        pattern = "*gemini*",
+        callback = function()
+          vim.api.nvim_buf_set_keymap(0, "t", "<Esc>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
         end,
       })
     end,
@@ -267,6 +296,25 @@ return {
       opts.mappings.n["<leader>v"] = { "<cmd>ClaudeCode<cr>", desc = "Claude Code Toggle" }
       opts.mappings.n["<leader>cr"] = { "<cmd>ClaudeCodeResume<cr>", desc = "Claude Code Resume" }
       opts.mappings.n["<leader>ct"] = { "<cmd>ClaudeCodeContinue<cr>", desc = "Claude Code Continue" }
+      -- Add Gemini CLI keybindings
+      opts.mappings.n["<leader>m"] = {
+        function()
+          -- Create a floating terminal for Gemini CLI
+          local Terminal = require("toggleterm.terminal").Terminal
+          local gemini = Terminal:new({
+            cmd = "gemini",
+            direction = "float",
+            float_opts = {
+              border = "curved",
+            },
+            on_open = function(term)
+              vim.api.nvim_buf_set_keymap(term.bufnr, "t", "<Esc>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
+            end,
+          })
+          gemini:toggle()
+        end,
+        desc = "Open Gemini CLI"
+      }
       -- Add keymap search
       opts.mappings.n["<leader>k"] = { "<cmd>Telescope keymaps<cr>", desc = "Search all keymaps" }
       return opts
@@ -285,10 +333,11 @@ return {
       on_open = function(term)
         -- Enter insert mode automatically
         vim.cmd("startinsert!")
-        -- Map <esc> to hide the terminal, but not for lazygit or claude
+        -- Map <esc> to hide the terminal, but not for lazygit, claude, or gemini
         local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
         local is_claude_float = term.direction == "float" and string.find(term.cmd or "", "claude")
-        if not is_lazygit_float and not is_claude_float then
+        local is_gemini_float = term.direction == "float" and string.find(term.cmd or "", "gemini")
+        if not is_lazygit_float and not is_claude_float and not is_gemini_float then
           vim.api.nvim_buf_set_keymap(
             term.bufnr,
             "t",

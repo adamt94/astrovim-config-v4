@@ -16,7 +16,7 @@ return {
     "greggh/claude-code.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
-      require("claude-code").setup({
+      require("claude-code").setup {
         window = {
           position = "float",
           float = {
@@ -25,16 +25,16 @@ return {
             row = "center",
             col = "center",
             relative = "editor",
-            border = "rounded"
-          }
+            border = "rounded",
+          },
         },
         keymaps = {
           close = {
             terminal = "<Esc>", -- Use escape key to close Claude Code terminal
           },
-        }
-      })
-      
+        },
+      }
+
       -- Auto-close floating terminal when Claude process terminates
       vim.api.nvim_create_autocmd("TermClose", {
         pattern = "*claude*",
@@ -49,13 +49,11 @@ return {
           end
           -- Delete the buffer to prevent naming conflicts
           vim.schedule(function()
-            if vim.api.nvim_buf_is_valid(bufnr) then
-              vim.api.nvim_buf_delete(bufnr, { force = true })
-            end
+            if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_delete(bufnr, { force = true }) end
           end)
         end,
       })
-      
+
       -- Override ESC key in Claude Code terminals to close the terminal
       vim.api.nvim_create_autocmd("TermOpen", {
         pattern = "*claude*",
@@ -63,7 +61,7 @@ return {
           vim.api.nvim_buf_set_keymap(0, "t", "<Esc>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
         end,
       })
-      
+
       -- Close Claude Code and Gemini CLI floating terminals when clicking outside
       vim.api.nvim_create_autocmd("WinEnter", {
         pattern = "*",
@@ -71,14 +69,14 @@ return {
           local current_win = vim.api.nvim_get_current_win()
           local current_buf = vim.api.nvim_win_get_buf(current_win)
           local current_buf_name = vim.api.nvim_buf_get_name(current_buf)
-          
+
           -- Check if we clicked outside a Claude Code or Gemini CLI terminal
           for _, winid in ipairs(vim.api.nvim_list_wins()) do
             if winid ~= current_win then
               local buf = vim.api.nvim_win_get_buf(winid)
               local buf_name = vim.api.nvim_buf_get_name(buf)
               local win_config = vim.api.nvim_win_get_config(winid)
-              
+
               -- Check if this is a floating Claude Code or Gemini CLI terminal
               if (string.find(buf_name, "claude") or string.find(buf_name, "gemini")) and win_config.relative ~= "" then
                 -- Close the floating window
@@ -88,7 +86,7 @@ return {
           end
         end,
       })
-      
+
       -- Auto-close floating terminal when Gemini process terminates
       vim.api.nvim_create_autocmd("TermClose", {
         pattern = "*gemini*",
@@ -103,13 +101,11 @@ return {
           end
           -- Delete the buffer to prevent naming conflicts
           vim.schedule(function()
-            if vim.api.nvim_buf_is_valid(bufnr) then
-              vim.api.nvim_buf_delete(bufnr, { force = true })
-            end
+            if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_delete(bufnr, { force = true }) end
           end)
         end,
       })
-      
+
       -- Override ESC key in Gemini CLI terminals to close the terminal
       vim.api.nvim_create_autocmd("TermOpen", {
         pattern = "*gemini*",
@@ -127,7 +123,7 @@ return {
       { "nvim-lua/plenary.nvim" },
     },
     config = function()
-      require("CopilotChat").setup({
+      require("CopilotChat").setup {
         debug = false,
         window = {
           layout = "float",
@@ -207,7 +203,7 @@ return {
             normal = "gs",
           },
         },
-      })
+      }
     end,
   },
 
@@ -301,19 +297,25 @@ return {
         function()
           -- Create a floating terminal for Gemini CLI
           local Terminal = require("toggleterm.terminal").Terminal
-          local gemini = Terminal:new({
+          local gemini = Terminal:new {
             cmd = "gemini",
             direction = "float",
             float_opts = {
               border = "curved",
             },
             on_open = function(term)
-              vim.api.nvim_buf_set_keymap(term.bufnr, "t", "<Esc>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
+              vim.api.nvim_buf_set_keymap(
+                term.bufnr,
+                "t",
+                "<Esc>",
+                "<C-\\><C-n>:close<CR>",
+                { noremap = true, silent = true }
+              )
             end,
-          })
+          }
           gemini:toggle()
         end,
-        desc = "Open Gemini CLI"
+        desc = "Open Gemini CLI",
       }
       -- Add keymap search
       opts.mappings.n["<leader>k"] = { "<cmd>Telescope keymaps<cr>", desc = "Search all keymaps" }
@@ -332,7 +334,7 @@ return {
       -- Function to run on opening a terminal
       on_open = function(term)
         -- Enter insert mode automatically
-        vim.cmd("startinsert!")
+        vim.cmd "startinsert!"
         -- Map <esc> to hide the terminal, but not for lazygit, claude, or gemini
         local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
         local is_claude_float = term.direction == "float" and string.find(term.cmd or "", "claude")
@@ -361,21 +363,29 @@ return {
         if string.find(term.cmd or "", "lazygit") then
           term:hide()
           vim.schedule(function()
-            if vim.api.nvim_buf_is_valid(term.bufnr) then
-              vim.api.nvim_buf_delete(term.bufnr, { force = true })
-            end
+            if vim.api.nvim_buf_is_valid(term.bufnr) then vim.api.nvim_buf_delete(term.bufnr, { force = true }) end
           end)
         end
       end,
     },
   },
-  
+
   -- Configure hardtime plugin
   {
     "m4xshen/hardtime.nvim",
     opts = {
-      hint = true,        -- Enable hint mode
-      disable_mouse = false,  -- Allow mouse usage
+      enabled = true,
+      disable_mouse = false,
+      disabled_keys = {
+        ["<Up>"] = {},
+        ["<Down>"] = {},
+        ["<Left>"] = {},
+        ["<Right>"] = {},
+      },
+      restriction_mode = "hint",
+      hint = true,
+      max_count = 5,
+      allow_different_key = true,
     },
   },
 }

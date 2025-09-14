@@ -38,7 +38,7 @@ This is an AstroNvim v4+ configuration repository - a customized Neovim setup bu
 - **Copilot Chat**: `<leader>cx`
 - **Floating terminals**: `<leader>t1`, `<leader>t2`, `<leader>t3`, `<leader>tt` (last used)
 - **Buffer navigation**: `H` (previous), `L` (next)
-- **Terminal escape**: `<Esc>` closes floating terminals (except lazygit and claude)
+- **Terminal escape**: `<Esc>` closes floating terminals (except lazygit, claude, and gemini which use `<Ctrl-C>`)
 
 ## Plugin Configuration Patterns
 
@@ -71,9 +71,9 @@ New plugins should be added to `lua/plugins/user.lua` following the existing pat
 ## Terminal Integration
 
 The configuration includes sophisticated terminal handling:
-- Claude Code terminals use custom escape key behavior
+- Claude Code and Gemini CLI terminals use Ctrl+C to close (allowing Esc for internal navigation)
 - ToggleTerm floating windows with numbered access
-- Special handling for lazygit and claude processes
+- Special handling for lazygit, claude, and gemini processes
 - Auto-close functionality for terminated processes
 
 ## Important Notes

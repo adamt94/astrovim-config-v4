@@ -30,7 +30,7 @@ return {
         },
         keymaps = {
           close = {
-            terminal = "<Esc>", -- Use escape key to close Claude Code terminal
+            terminal = "<C-c>", -- Use Ctrl+C to close Claude Code terminal instead of Esc
           },
         },
       }
@@ -54,11 +54,11 @@ return {
         end,
       })
 
-      -- Override ESC key in Claude Code terminals to close the terminal
+      -- Override Ctrl+C key in Claude Code terminals to close the terminal (allow Esc for Claude's navigation)
       vim.api.nvim_create_autocmd("TermOpen", {
         pattern = "*claude*",
         callback = function()
-          vim.api.nvim_buf_set_keymap(0, "t", "<Esc>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
+          vim.api.nvim_buf_set_keymap(0, "t", "<C-c>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
         end,
       })
 
@@ -106,11 +106,11 @@ return {
         end,
       })
 
-      -- Override ESC key in Gemini CLI terminals to close the terminal
+      -- Override Ctrl+C key in Gemini CLI terminals to close the terminal (allow Esc for navigation)
       vim.api.nvim_create_autocmd("TermOpen", {
         pattern = "*gemini*",
         callback = function()
-          vim.api.nvim_buf_set_keymap(0, "t", "<Esc>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
+          vim.api.nvim_buf_set_keymap(0, "t", "<C-c>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
         end,
       })
     end,
@@ -307,7 +307,7 @@ return {
               vim.api.nvim_buf_set_keymap(
                 term.bufnr,
                 "t",
-                "<Esc>",
+                "<C-c>",
                 "<C-\\><C-n>:close<CR>",
                 { noremap = true, silent = true }
               )

@@ -70,15 +70,15 @@ return {
           local current_buf = vim.api.nvim_win_get_buf(current_win)
           local current_buf_name = vim.api.nvim_buf_get_name(current_buf)
 
-          -- Check if we clicked outside a Claude Code or Gemini CLI terminal
+          -- Check if we clicked outside a Claude Code, Gemini CLI, or Copilot CLI terminal
           for _, winid in ipairs(vim.api.nvim_list_wins()) do
             if winid ~= current_win then
               local buf = vim.api.nvim_win_get_buf(winid)
               local buf_name = vim.api.nvim_buf_get_name(buf)
               local win_config = vim.api.nvim_win_get_config(winid)
 
-              -- Check if this is a floating Claude Code or Gemini CLI terminal
-              if (string.find(buf_name, "claude") or string.find(buf_name, "gemini")) and win_config.relative ~= "" then
+              -- Check if this is a floating Claude Code, Gemini CLI, or Copilot CLI terminal
+              if (string.find(buf_name, "claude") or string.find(buf_name, "gemini") or string.find(buf_name, "gh copilot")) and win_config.relative ~= "" then
                 -- Close the floating window
                 vim.api.nvim_win_close(winid, true)
               end
@@ -109,6 +109,33 @@ return {
       -- Override Ctrl+C key in Gemini CLI terminals to close the terminal (allow Esc for navigation)
       vim.api.nvim_create_autocmd("TermOpen", {
         pattern = "*gemini*",
+        callback = function()
+          vim.api.nvim_buf_set_keymap(0, "t", "<C-c>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
+        end,
+      })
+
+      -- Auto-close floating terminal when GitHub Copilot CLI process terminates
+      vim.api.nvim_create_autocmd("TermClose", {
+        pattern = "*gh copilot*",
+        callback = function(args)
+          local bufnr = args.buf
+          -- Find and close the window containing this buffer
+          for _, winid in ipairs(vim.api.nvim_list_wins()) do
+            if vim.api.nvim_win_get_buf(winid) == bufnr then
+              vim.api.nvim_win_close(winid, true)
+              break
+            end
+          end
+          -- Delete the buffer to prevent naming conflicts
+          vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_delete(bufnr, { force = true }) end
+          end)
+        end,
+      })
+
+      -- Override Ctrl+C key in GitHub Copilot CLI terminals to close the terminal (allow Esc for navigation)
+      vim.api.nvim_create_autocmd("TermOpen", {
+        pattern = "*gh copilot*",
         callback = function()
           vim.api.nvim_buf_set_keymap(0, "t", "<C-c>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
         end,
@@ -317,6 +344,44 @@ return {
         end,
         desc = "Open Gemini CLI",
       }
+      -- Add GitHub Copilot CLI keybindings
+      opts.mappings.n["<leader>cp"] = {
+        function()
+          -- Create a floating terminal for GitHub Copilot CLI
+          local Terminal = require("toggleterm.terminal").Terminal
+          local copilot_cli = Terminal:new {
+            cmd = "gh copilot",
+            direction = "float",
+            float_opts = {
+              border = "curved",
+              width = 0.9,
+              height = 0.9,
+            },
+            on_open = function(term)
+              vim.api.nvim_buf_set_keymap(
+                term.bufnr,
+                "t",
+                "<C-c>",
+                "<C-\\><C-n>:close<CR>",
+                { noremap = true, silent = true }
+              )
+            end,
+            on_exit = function(term)
+              -- Auto-close the terminal when the process exits
+              if term.job_id and vim.fn.jobwait({ term.job_id }, 0)[1] == -1 then
+                return
+              end
+              vim.schedule(function()
+                if vim.api.nvim_buf_is_valid(term.bufnr) then
+                  vim.api.nvim_buf_delete(term.bufnr, { force = true })
+                end
+              end)
+            end,
+          }
+          copilot_cli:toggle()
+        end,
+        desc = "Open GitHub Copilot CLI",
+      }
       -- Add keymap search
       opts.mappings.n["<leader>k"] = { "<cmd>Telescope keymaps<cr>", desc = "Search all keymaps" }
       return opts
@@ -335,11 +400,12 @@ return {
       on_open = function(term)
         -- Enter insert mode automatically
         vim.cmd "startinsert!"
-        -- Map <esc> to hide the terminal, but not for lazygit, claude, or gemini
+        -- Map <esc> to hide the terminal, but not for lazygit, claude, gemini, or copilot cli
         local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
         local is_claude_float = term.direction == "float" and string.find(term.cmd or "", "claude")
         local is_gemini_float = term.direction == "float" and string.find(term.cmd or "", "gemini")
-        if not is_lazygit_float and not is_claude_float and not is_gemini_float then
+        local is_copilot_cli_float = term.direction == "float" and string.find(term.cmd or "", "gh copilot")
+        if not is_lazygit_float and not is_claude_float and not is_gemini_float and not is_copilot_cli_float then
           vim.api.nvim_buf_set_keymap(
             term.bufnr,
             "t",

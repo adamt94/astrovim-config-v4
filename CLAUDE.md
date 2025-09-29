@@ -20,9 +20,10 @@ This is an AstroNvim v4+ configuration repository - a customized Neovim setup bu
 - `lua/community.lua`: Community plugin imports
 
 ### Important Integrations
-- **Claude Code**: Configured as a floating window with custom keybindings (`<leader>v` to open, `<leader>c` for chat)
-- **GitHub Copilot Chat**: Floating window interface with custom prompts and keybindings (`<leader>cx`)
-- **GitHub Copilot CLI**: Terminal interface for command-line GitHub Copilot (`<leader>cp`)
+- **Claude Code**: Configured as a floating window with custom keybindings (`<leader>v` to open, `<leader>av` for chat)
+- **GitHub Copilot Chat**: Floating window interface with custom prompts and keybindings (`<leader>ax`)
+- **GitHub Copilot CLI**: Terminal interface for command-line GitHub Copilot (`<leader>ap`)
+- **Gemini CLI**: Terminal interface for Google Gemini (`<leader>ag`)
 - **ToggleTerm**: Multi-terminal support with numbered floating terminals (`<leader>t1`, `<leader>t2`, etc.)
 
 ## Development Commands

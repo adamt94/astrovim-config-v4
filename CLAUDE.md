@@ -22,6 +22,7 @@ This is an AstroNvim v4+ configuration repository - a customized Neovim setup bu
 ### Important Integrations
 - **Claude Code**: Configured as a floating window with custom keybindings (`<leader>v` to open, `<leader>c` for chat)
 - **GitHub Copilot Chat**: Floating window interface with custom prompts and keybindings (`<leader>cx`)
+- **GitHub Copilot CLI**: Terminal interface for command-line GitHub Copilot (`<leader>cp`)
 - **ToggleTerm**: Multi-terminal support with numbered floating terminals (`<leader>t1`, `<leader>t2`, etc.)
 
 ## Development Commands
@@ -36,9 +37,10 @@ This is an AstroNvim v4+ configuration repository - a customized Neovim setup bu
 - **Local leader**: `,`
 - **Claude Code**: `<leader>v` (open), `<leader>c` (chat)
 - **Copilot Chat**: `<leader>cx`
+- **Copilot CLI**: `<leader>cp`
 - **Floating terminals**: `<leader>t1`, `<leader>t2`, `<leader>t3`, `<leader>tt` (last used)
 - **Buffer navigation**: `H` (previous), `L` (next)
-- **Terminal escape**: `<Esc>` closes floating terminals (except lazygit, claude, and gemini which use `<Ctrl-C>`)
+- **Terminal escape**: `<Esc>` closes floating terminals (except lazygit, claude, gemini, and copilot which use `<Ctrl-C>`). `<Ctrl-C>` also closes all floating terminals as a universal option.
 
 ## Plugin Configuration Patterns
 
@@ -72,8 +74,10 @@ New plugins should be added to `lua/plugins/user.lua` following the existing pat
 
 The configuration includes sophisticated terminal handling:
 - Claude Code and Gemini CLI terminals use Ctrl+C to close (allowing Esc for internal navigation)
+- GitHub Copilot CLI terminals use Ctrl+C to close (allowing Esc for internal navigation)
+- **All floating terminals** now support Ctrl+C as a universal close option
 - ToggleTerm floating windows with numbered access
-- Special handling for lazygit, claude, and gemini processes
+- Special handling for lazygit, claude, gemini, and copilot processes
 - Auto-close functionality for terminated processes
 
 ## Important Notes
@@ -83,3 +87,4 @@ The configuration includes sophisticated terminal handling:
 - The configuration includes custom ASCII art for the dashboard
 - Several default plugins are disabled (better-escape.nvim)
 - Custom autopairs rules for LaTeX files
+- **GitHub Copilot CLI**: Requires `gh extension install github/gh-copilot` to be installed first

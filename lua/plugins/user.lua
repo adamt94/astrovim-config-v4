@@ -78,7 +78,7 @@ return {
               local win_config = vim.api.nvim_win_get_config(winid)
 
               -- Check if this is a floating Claude Code, Gemini CLI, or Copilot CLI terminal
-              if (string.find(buf_name, "claude") or string.find(buf_name, "gemini") or string.find(buf_name, "gh copilot")) and win_config.relative ~= "" then
+              if (string.find(buf_name, "claude") or string.find(buf_name, "gemini") or string.find(buf_name, "copilot")) and win_config.relative ~= "" then
                 -- Close the floating window
                 vim.api.nvim_win_close(winid, true)
               end
@@ -116,7 +116,7 @@ return {
 
       -- Auto-close floating terminal when GitHub Copilot CLI process terminates
       vim.api.nvim_create_autocmd("TermClose", {
-        pattern = "*gh copilot*",
+        pattern = "*copilot*",
         callback = function(args)
           local bufnr = args.buf
           -- Find and close the window containing this buffer
@@ -135,7 +135,7 @@ return {
 
       -- Override Ctrl+C key in GitHub Copilot CLI terminals to close the terminal (allow Esc for navigation)
       vim.api.nvim_create_autocmd("TermOpen", {
-        pattern = "*gh copilot*",
+        pattern = "*copilot*",
         callback = function()
           vim.api.nvim_buf_set_keymap(0, "t", "<C-c>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
         end,
@@ -313,19 +313,19 @@ return {
       end
       -- Add mapping for the last used terminal
       opts.mappings.n["<leader>tt"] = { "<cmd>ToggleTerm direction=float<cr>", desc = "Toggle last floating terminal" }
-      -- Add Copilot Chat keybinding
-      opts.mappings.n["<leader>cx"] = { "<cmd>CopilotChat<cr>", desc = "Open Copilot Chat" }
+      -- Add AI Assistant keybindings (moved from <leader>c to avoid conflicts with buffer close)
+      opts.mappings.n["<leader>ax"] = { "<cmd>CopilotChat<cr>", desc = "Open Copilot Chat" }
       -- Add Claude Code keybindings
       opts.mappings.n["<leader>v"] = { "<cmd>ClaudeCode<cr>", desc = "Claude Code Toggle" }
-      opts.mappings.n["<leader>cv"] = { "<cmd>ClaudeCode<cr>", desc = "Claude Code" }
-      opts.mappings.n["<leader>cr"] = { "<cmd>ClaudeCodeResume<cr>", desc = "Claude Code Resume" }
-      -- Change the original Copilot CLI mapping to use leader ct
-      opts.mappings.n["<leader>ct"] = {
+      opts.mappings.n["<leader>av"] = { "<cmd>ClaudeCode<cr>", desc = "Claude Code" }
+      opts.mappings.n["<leader>ar"] = { "<cmd>ClaudeCodeResume<cr>", desc = "Claude Code Resume" }
+      -- GitHub Copilot CLI mapping
+      opts.mappings.n["<leader>ap"] = {
         function()
           -- Create a floating terminal for GitHub Copilot CLI
           local Terminal = require("toggleterm.terminal").Terminal
           local copilot_cli = Terminal:new {
-            cmd = "gh copilot",
+            cmd = "copilot",
             direction = "float",
             float_opts = {
               border = "curved",
@@ -382,7 +382,7 @@ return {
         end,
         desc = "Open Gemini CLI",
       }
-      opts.mappings.n["<leader>cg"] = {
+      opts.mappings.n["<leader>ag"] = {
         function()
           -- Create a floating terminal for Gemini CLI
           local Terminal = require("toggleterm.terminal").Terminal
@@ -440,7 +440,7 @@ return {
         local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
         local is_claude_float = term.direction == "float" and string.find(term.cmd or "", "claude")
         local is_gemini_float = term.direction == "float" and string.find(term.cmd or "", "gemini")
-        local is_copilot_cli_float = term.direction == "float" and string.find(term.cmd or "", "gh copilot")
+        local is_copilot_cli_float = term.direction == "float" and string.find(term.cmd or "", "copilot")
         if not is_lazygit_float and not is_claude_float and not is_gemini_float and not is_copilot_cli_float then
           vim.api.nvim_buf_set_keymap(
             term.bufnr,

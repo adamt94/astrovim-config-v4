@@ -35,9 +35,10 @@ This is an AstroNvim v4+ configuration repository - a customized Neovim setup bu
 ### Key Mappings
 - **Leader key**: `<space>`
 - **Local leader**: `,`
-- **Claude Code**: `<leader>v` (open), `<leader>c` (chat)
-- **Copilot Chat**: `<leader>cx`
-- **Copilot CLI**: `<leader>cp`
+- **Claude Code**: `<leader>v` (open), `<leader>av` (chat), `<leader>ar` (resume)
+- **Copilot Chat**: `<leader>ax`
+- **Copilot CLI**: `<leader>ap`
+- **Gemini CLI**: `<leader>ag`
 - **Floating terminals**: `<leader>t1`, `<leader>t2`, `<leader>t3`, `<leader>tt` (last used)
 - **Buffer navigation**: `H` (previous), `L` (next)
 - **Terminal escape**: `<Esc>` closes floating terminals (except lazygit, claude, gemini, and copilot which use `<Ctrl-C>`). `<Ctrl-C>` also closes all floating terminals as a universal option.
@@ -87,4 +88,4 @@ The configuration includes sophisticated terminal handling:
 - The configuration includes custom ASCII art for the dashboard
 - Several default plugins are disabled (better-escape.nvim)
 - Custom autopairs rules for LaTeX files
-- **GitHub Copilot CLI**: Requires `gh extension install github/gh-copilot` to be installed first
+- **GitHub Copilot CLI**: Uses the `copilot` command (ensure it's installed and in PATH)

@@ -154,8 +154,8 @@ return {
         debug = false,
         window = {
           layout = "float",
-          width = 0.9,
-          height = 0.9,
+          width = math.floor(vim.o.columns * 0.9),
+          height = math.floor(vim.o.lines * 0.9),
           border = "rounded",
           title = "Copilot Chat",
         },
@@ -317,8 +317,46 @@ return {
       opts.mappings.n["<leader>cx"] = { "<cmd>CopilotChat<cr>", desc = "Open Copilot Chat" }
       -- Add Claude Code keybindings
       opts.mappings.n["<leader>v"] = { "<cmd>ClaudeCode<cr>", desc = "Claude Code Toggle" }
+      opts.mappings.n["<leader>cv"] = { "<cmd>ClaudeCode<cr>", desc = "Claude Code" }
       opts.mappings.n["<leader>cr"] = { "<cmd>ClaudeCodeResume<cr>", desc = "Claude Code Resume" }
-      opts.mappings.n["<leader>ct"] = { "<cmd>ClaudeCodeContinue<cr>", desc = "Claude Code Continue" }
+      -- Change the original Copilot CLI mapping to use leader ct
+      opts.mappings.n["<leader>ct"] = {
+        function()
+          -- Create a floating terminal for GitHub Copilot CLI
+          local Terminal = require("toggleterm.terminal").Terminal
+          local copilot_cli = Terminal:new {
+            cmd = "gh copilot",
+            direction = "float",
+            float_opts = {
+              border = "curved",
+              width = math.floor(vim.o.columns * 0.9),
+              height = math.floor(vim.o.lines * 0.9),
+            },
+            on_open = function(term)
+              vim.api.nvim_buf_set_keymap(
+                term.bufnr,
+                "t",
+                "<C-c>",
+                "<C-\\><C-n>:close<CR>",
+                { noremap = true, silent = true }
+              )
+            end,
+            on_exit = function(term)
+              -- Auto-close the terminal when the process exits
+              if term.job_id and vim.fn.jobwait({ term.job_id }, 0)[1] == -1 then
+                return
+              end
+              vim.schedule(function()
+                if vim.api.nvim_buf_is_valid(term.bufnr) then
+                  vim.api.nvim_buf_delete(term.bufnr, { force = true })
+                end
+              end)
+            end,
+          }
+          copilot_cli:toggle()
+        end,
+        desc = "Copilot CLI",
+      }
       -- Add Gemini CLI keybindings
       opts.mappings.n["<leader>m"] = {
         function()
@@ -344,18 +382,15 @@ return {
         end,
         desc = "Open Gemini CLI",
       }
-      -- Add GitHub Copilot CLI keybindings
-      opts.mappings.n["<leader>cp"] = {
+      opts.mappings.n["<leader>cg"] = {
         function()
-          -- Create a floating terminal for GitHub Copilot CLI
+          -- Create a floating terminal for Gemini CLI
           local Terminal = require("toggleterm.terminal").Terminal
-          local copilot_cli = Terminal:new {
-            cmd = "gh copilot",
+          local gemini = Terminal:new {
+            cmd = "gemini",
             direction = "float",
             float_opts = {
               border = "curved",
-              width = 0.9,
-              height = 0.9,
             },
             on_open = function(term)
               vim.api.nvim_buf_set_keymap(
@@ -366,21 +401,10 @@ return {
                 { noremap = true, silent = true }
               )
             end,
-            on_exit = function(term)
-              -- Auto-close the terminal when the process exits
-              if term.job_id and vim.fn.jobwait({ term.job_id }, 0)[1] == -1 then
-                return
-              end
-              vim.schedule(function()
-                if vim.api.nvim_buf_is_valid(term.bufnr) then
-                  vim.api.nvim_buf_delete(term.bufnr, { force = true })
-                end
-              end)
-            end,
           }
-          copilot_cli:toggle()
+          gemini:toggle()
         end,
-        desc = "Open GitHub Copilot CLI",
+        desc = "Gemini CLI",
       }
       -- Add keymap search
       opts.mappings.n["<leader>k"] = { "<cmd>Telescope keymaps<cr>", desc = "Search all keymaps" }

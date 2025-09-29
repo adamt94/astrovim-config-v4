@@ -400,6 +400,18 @@ return {
       on_open = function(term)
         -- Enter insert mode automatically
         vim.cmd "startinsert!"
+        
+        -- Add Ctrl+C as a universal close option for ALL floating terminals
+        if term.direction == "float" then
+          vim.api.nvim_buf_set_keymap(
+            term.bufnr,
+            "t",
+            "<C-c>",
+            string.format("<cmd>lua require('toggleterm').toggle(%d)<CR>", term.id),
+            { noremap = true, silent = true }
+          )
+        end
+        
         -- Map <esc> to hide the terminal, but not for lazygit, claude, gemini, or copilot cli
         local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
         local is_claude_float = term.direction == "float" and string.find(term.cmd or "", "claude")

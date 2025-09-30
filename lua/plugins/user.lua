@@ -67,8 +67,6 @@ return {
         pattern = "*",
         callback = function()
           local current_win = vim.api.nvim_get_current_win()
-          local current_buf = vim.api.nvim_win_get_buf(current_win)
-          local current_buf_name = vim.api.nvim_buf_get_name(current_buf)
 
           -- Check if we clicked outside a Claude Code, Gemini CLI, or Copilot CLI terminal
           for _, winid in ipairs(vim.api.nvim_list_wins()) do
@@ -78,7 +76,10 @@ return {
               local win_config = vim.api.nvim_win_get_config(winid)
 
               -- Check if this is a floating Claude Code, Gemini CLI, or Copilot CLI terminal
-              if (string.find(buf_name, "claude") or string.find(buf_name, "gemini") or string.find(buf_name, "copilot")) and win_config.relative ~= "" then
+              if
+                (string.find(buf_name, "claude") or string.find(buf_name, "gemini") or string.find(buf_name, "copilot"))
+                and win_config.relative ~= ""
+              then
                 -- Close the floating window
                 vim.api.nvim_win_close(winid, true)
               end
@@ -304,108 +305,147 @@ return {
   {
     "AstroNvim/astrocore",
     opts = function(_, opts)
+      -- Global storage for special terminals and last active terminal tracking
+      _G.special_terminals = _G.special_terminals or {}
+      _G.last_active_terminal = _G.last_active_terminal or { type = "normal", id = 1 }
+
+      -- Helper function to track last active terminal
+      local function track_terminal(type, id_or_instance)
+        _G.last_active_terminal = { type = type, id_or_instance = id_or_instance }
+      end
+
       -- Add mappings for numbered floating terminals
       for i = 1, 3 do
         opts.mappings.n["<leader>t" .. i] = {
-          function() require("toggleterm").toggle(i, nil, nil, "float") end,
+          function()
+            require("toggleterm").toggle(i, nil, nil, "float")
+            track_terminal("normal", i)
+          end,
           desc = "Toggle floating terminal " .. i,
         }
       end
-      -- Add mapping for the last used terminal
-      opts.mappings.n["<leader>tt"] = { "<cmd>ToggleTerm direction=float<cr>", desc = "Toggle last floating terminal" }
+
+      -- Add mapping for the last used terminal (including special terminals)
+      opts.mappings.n["<leader>tt"] = {
+        function()
+          local last = _G.last_active_terminal
+          if last.type == "normal" then
+            require("toggleterm").toggle(last.id_or_instance, nil, nil, "float")
+          elseif last.type == "copilot" and _G.special_terminals.copilot then
+            _G.special_terminals.copilot:toggle()
+          elseif last.type == "gemini" and _G.special_terminals.gemini then
+            _G.special_terminals.gemini:toggle()
+          elseif last.type == "claude" then
+            vim.cmd "ClaudeCode"
+          else
+            -- Fallback to terminal 1 if no last terminal is tracked
+            require("toggleterm").toggle(1, nil, nil, "float")
+            track_terminal("normal", 1)
+          end
+        end,
+        desc = "Toggle last floating terminal",
+      }
+
       -- Add AI Assistant keybindings (moved from <leader>c to avoid conflicts with buffer close)
       opts.mappings.n["<leader>ax"] = { "<cmd>CopilotChat<cr>", desc = "Open Copilot Chat" }
+
       -- Add Claude Code keybindings
-      opts.mappings.n["<leader>v"] = { "<cmd>ClaudeCode<cr>", desc = "Claude Code Toggle" }
-      opts.mappings.n["<leader>av"] = { "<cmd>ClaudeCode<cr>", desc = "Claude Code" }
+      opts.mappings.n["<leader>v"] = {
+        function()
+          vim.cmd "ClaudeCode"
+          track_terminal("claude", nil)
+        end,
+        desc = "Claude Code Toggle",
+      }
+      opts.mappings.n["<leader>av"] = {
+        function()
+          vim.cmd "ClaudeCode"
+          track_terminal("claude", nil)
+        end,
+        desc = "Claude Code",
+      }
       opts.mappings.n["<leader>ar"] = { "<cmd>ClaudeCodeResume<cr>", desc = "Claude Code Resume" }
-      -- GitHub Copilot CLI mapping
+
+      -- GitHub Copilot CLI mapping - reuse existing terminal instance
       opts.mappings.n["<leader>ap"] = {
         function()
-          -- Create a floating terminal for GitHub Copilot CLI
-          local Terminal = require("toggleterm.terminal").Terminal
-          local copilot_cli = Terminal:new {
-            cmd = "copilot",
-            direction = "float",
-            float_opts = {
-              border = "curved",
-              width = math.floor(vim.o.columns * 0.9),
-              height = math.floor(vim.o.lines * 0.9),
-            },
-            on_open = function(term)
-              vim.api.nvim_buf_set_keymap(
-                term.bufnr,
-                "t",
-                "<C-c>",
-                "<C-\\><C-n>:close<CR>",
-                { noremap = true, silent = true }
-              )
-            end,
-            on_exit = function(term)
-              -- Auto-close the terminal when the process exits
-              if term.job_id and vim.fn.jobwait({ term.job_id }, 0)[1] == -1 then
-                return
-              end
-              vim.schedule(function()
-                if vim.api.nvim_buf_is_valid(term.bufnr) then
-                  vim.api.nvim_buf_delete(term.bufnr, { force = true })
-                end
-              end)
-            end,
-          }
-          copilot_cli:toggle()
+          if not _G.special_terminals.copilot then
+            -- Create a floating terminal for GitHub Copilot CLI
+            local Terminal = require("toggleterm.terminal").Terminal
+            _G.special_terminals.copilot = Terminal:new {
+              cmd = "copilot",
+              direction = "float",
+              float_opts = {
+                border = "curved",
+                width = math.floor(vim.o.columns * 0.9),
+                height = math.floor(vim.o.lines * 0.9),
+              },
+              on_open = function(term)
+                track_terminal("copilot", term)
+                vim.api.nvim_buf_set_keymap(
+                  term.bufnr,
+                  "t",
+                  "<C-c>",
+                  "<cmd>lua _G.special_terminals.copilot:toggle()<CR>",
+                  { noremap = true, silent = true }
+                )
+              end,
+              on_exit = function(term)
+                -- Clean up the terminal instance when process exits
+                vim.schedule(function()
+                  if vim.api.nvim_buf_is_valid(term.bufnr) then
+                    vim.api.nvim_buf_delete(term.bufnr, { force = true })
+                  end
+                  _G.special_terminals.copilot = nil
+                end)
+              end,
+            }
+          end
+          _G.special_terminals.copilot:toggle()
+          track_terminal("copilot", _G.special_terminals.copilot)
         end,
         desc = "Copilot CLI",
       }
-      -- Add Gemini CLI keybindings
-      opts.mappings.n["<leader>m"] = {
-        function()
-          -- Create a floating terminal for Gemini CLI
-          local Terminal = require("toggleterm.terminal").Terminal
-          local gemini = Terminal:new {
-            cmd = "gemini",
-            direction = "float",
-            float_opts = {
-              border = "curved",
-            },
-            on_open = function(term)
-              vim.api.nvim_buf_set_keymap(
-                term.bufnr,
-                "t",
-                "<C-c>",
-                "<C-\\><C-n>:close<CR>",
-                { noremap = true, silent = true }
-              )
-            end,
-          }
-          gemini:toggle()
-        end,
-        desc = "Open Gemini CLI",
-      }
+
+      -- Add Gemini CLI keybindings - remove duplicate, keep only <leader>ag
       opts.mappings.n["<leader>ag"] = {
         function()
-          -- Create a floating terminal for Gemini CLI
-          local Terminal = require("toggleterm.terminal").Terminal
-          local gemini = Terminal:new {
-            cmd = "gemini",
-            direction = "float",
-            float_opts = {
-              border = "curved",
-            },
-            on_open = function(term)
-              vim.api.nvim_buf_set_keymap(
-                term.bufnr,
-                "t",
-                "<C-c>",
-                "<C-\\><C-n>:close<CR>",
-                { noremap = true, silent = true }
-              )
-            end,
-          }
-          gemini:toggle()
+          if not _G.special_terminals.gemini then
+            -- Create a floating terminal for Gemini CLI
+            local Terminal = require("toggleterm.terminal").Terminal
+            _G.special_terminals.gemini = Terminal:new {
+              cmd = "gemini",
+              direction = "float",
+              float_opts = {
+                border = "curved",
+              },
+              on_open = function(term)
+                track_terminal("gemini", term)
+                vim.api.nvim_buf_set_keymap(
+                  term.bufnr,
+                  "t",
+                  "<C-c>",
+                  "<cmd>lua _G.special_terminals.gemini:toggle()<CR>",
+                  { noremap = true, silent = true }
+                )
+              end,
+              on_exit = function(term)
+                -- Clean up the terminal instance when process exits
+                vim.schedule(function()
+                  if vim.api.nvim_buf_is_valid(term.bufnr) then
+                    vim.api.nvim_buf_delete(term.bufnr, { force = true })
+                  end
+                  _G.special_terminals.gemini = nil
+                end)
+              end,
+            }
+          end
+          _G.special_terminals.gemini:toggle()
+          track_terminal("gemini", _G.special_terminals.gemini)
         end,
         desc = "Gemini CLI",
       }
+
       -- Add keymap search
       opts.mappings.n["<leader>k"] = { "<cmd>Telescope keymaps<cr>", desc = "Search all keymaps" }
       return opts
@@ -424,9 +464,22 @@ return {
       on_open = function(term)
         -- Enter insert mode automatically
         vim.cmd "startinsert!"
-        
-        -- Add Ctrl+C as a universal close option for ALL floating terminals
+
+        -- Track normal terminals when they're opened
         if term.direction == "float" then
+          -- Update last active terminal tracking for normal terminals
+          if
+            not (
+              string.find(term.cmd or "", "lazygit")
+              or string.find(term.cmd or "", "claude")
+              or string.find(term.cmd or "", "gemini")
+              or string.find(term.cmd or "", "copilot")
+            )
+          then
+            _G.last_active_terminal = { type = "normal", id_or_instance = term.id }
+          end
+
+          -- Add Ctrl+C as a universal close option for ALL floating terminals
           vim.api.nvim_buf_set_keymap(
             term.bufnr,
             "t",
@@ -435,7 +488,7 @@ return {
             { noremap = true, silent = true }
           )
         end
-        
+
         -- Map <esc> to hide the terminal, but not for lazygit, claude, gemini, or copilot cli
         local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
         local is_claude_float = term.direction == "float" and string.find(term.cmd or "", "claude")

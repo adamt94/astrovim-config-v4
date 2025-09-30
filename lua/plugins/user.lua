@@ -30,7 +30,7 @@ return {
         },
         keymaps = {
           close = {
-            terminal = "<C-c>", -- Use Ctrl+C to close Claude Code terminal instead of Esc
+            terminal = "<C-q>", -- Use Ctrl+Q to close Claude Code terminal (Ctrl+C is needed for terminal kill)
           },
         },
       }
@@ -54,11 +54,11 @@ return {
         end,
       })
 
-      -- Override Ctrl+C key in Claude Code terminals to close the terminal (allow Esc for Claude's navigation)
+      -- Override Ctrl+Q key in Claude Code terminals to close the terminal (allow Esc for Claude's navigation, Ctrl+C for terminal kill)
       vim.api.nvim_create_autocmd("TermOpen", {
         pattern = "*claude*",
         callback = function()
-          vim.api.nvim_buf_set_keymap(0, "t", "<C-c>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
+          vim.api.nvim_buf_set_keymap(0, "t", "<C-q>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
         end,
       })
 
@@ -107,11 +107,11 @@ return {
         end,
       })
 
-      -- Override Ctrl+C key in Gemini CLI terminals to close the terminal (allow Esc for navigation)
+      -- Override Ctrl+Q key in Gemini CLI terminals to close the terminal (allow Esc for navigation, Ctrl+C for terminal kill)
       vim.api.nvim_create_autocmd("TermOpen", {
         pattern = "*gemini*",
         callback = function()
-          vim.api.nvim_buf_set_keymap(0, "t", "<C-c>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
+          vim.api.nvim_buf_set_keymap(0, "t", "<C-q>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
         end,
       })
 
@@ -134,11 +134,11 @@ return {
         end,
       })
 
-      -- Override Ctrl+C key in GitHub Copilot CLI terminals to close the terminal (allow Esc for navigation)
+      -- Override Ctrl+Q key in GitHub Copilot CLI terminals to close the terminal (allow Esc for navigation, Ctrl+C for terminal kill)
       vim.api.nvim_create_autocmd("TermOpen", {
         pattern = "*copilot*",
         callback = function()
-          vim.api.nvim_buf_set_keymap(0, "t", "<C-c>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
+          vim.api.nvim_buf_set_keymap(0, "t", "<C-q>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
         end,
       })
     end,
@@ -385,7 +385,7 @@ return {
                 vim.api.nvim_buf_set_keymap(
                   term.bufnr,
                   "t",
-                  "<C-c>",
+                  "<C-q>",
                   "<cmd>lua _G.special_terminals.copilot:toggle()<CR>",
                   { noremap = true, silent = true }
                 )
@@ -424,7 +424,7 @@ return {
                 vim.api.nvim_buf_set_keymap(
                   term.bufnr,
                   "t",
-                  "<C-c>",
+                  "<C-q>",
                   "<cmd>lua _G.special_terminals.gemini:toggle()<CR>",
                   { noremap = true, silent = true }
                 )
@@ -479,11 +479,11 @@ return {
             _G.last_active_terminal = { type = "normal", id_or_instance = term.id }
           end
 
-          -- Add Ctrl+C as a universal close option for ALL floating terminals
+          -- Add Ctrl+Q as a universal close option for ALL floating terminals
           vim.api.nvim_buf_set_keymap(
             term.bufnr,
             "t",
-            "<C-c>",
+            "<C-q>",
             string.format("<cmd>lua require('toggleterm').toggle(%d)<CR>", term.id),
             { noremap = true, silent = true }
           )

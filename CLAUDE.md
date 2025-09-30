@@ -42,7 +42,7 @@ This is an AstroNvim v4+ configuration repository - a customized Neovim setup bu
 - **Gemini CLI**: `<leader>ag`
 - **Floating terminals**: `<leader>t1`, `<leader>t2`, `<leader>t3`, `<leader>tt` (last used - includes Claude, Copilot, and Gemini terminals)
 - **Buffer navigation**: `H` (previous), `L` (next)
-- **Terminal escape**: `<Esc>` closes floating terminals (except lazygit, claude, gemini, and copilot which use `<Ctrl-C>`). `<Ctrl-C>` also closes all floating terminals as a universal option. Special terminals (Claude, Copilot CLI, Gemini CLI) toggle with their respective commands and `<Ctrl-C>`.
+- **Terminal escape**: `<Esc>` closes floating terminals (except lazygit, claude, gemini, and copilot which use `<Ctrl-Q>`). `<Ctrl-Q>` also closes all floating terminals as a universal option. Special terminals (Claude, Copilot CLI, Gemini CLI) toggle with their respective commands and `<Ctrl-Q>`.
 
 ## Plugin Configuration Patterns
 
@@ -75,9 +75,9 @@ New plugins should be added to `lua/plugins/user.lua` following the existing pat
 ## Terminal Integration
 
 The configuration includes sophisticated terminal handling:
-- Claude Code and Gemini CLI terminals use Ctrl+C to close (allowing Esc for internal navigation)
-- GitHub Copilot CLI terminals use Ctrl+C to close (allowing Esc for internal navigation)
-- **All floating terminals** now support Ctrl+C as a universal close option
+- Claude Code and Gemini CLI terminals use Ctrl+Q to close (allowing Esc for internal navigation, Ctrl+C for terminal kill)
+- GitHub Copilot CLI terminals use Ctrl+Q to close (allowing Esc for internal navigation, Ctrl+C for terminal kill)
+- **All floating terminals** now support Ctrl+Q as a universal close option
 - ToggleTerm floating windows with numbered access (`<leader>t1`, `<leader>t2`, `<leader>t3`)
 - **Smart last terminal tracking**: `<leader>tt` remembers and toggles the last used terminal (normal, Claude, Copilot CLI, or Gemini CLI)
 - **Terminal instance reuse**: Special terminals (Copilot CLI, Gemini CLI) reuse existing instances instead of creating new ones

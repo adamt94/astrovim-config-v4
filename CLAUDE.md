@@ -40,9 +40,9 @@ This is an AstroNvim v4+ configuration repository - a customized Neovim setup bu
 - **Copilot Chat**: `<leader>ax`
 - **Copilot CLI**: `<leader>ap`
 - **Gemini CLI**: `<leader>ag`
-- **Floating terminals**: `<leader>t1`, `<leader>t2`, `<leader>t3`, `<leader>tt` (last used)
+- **Floating terminals**: `<leader>t1`, `<leader>t2`, `<leader>t3`, `<leader>tt` (last used - includes Claude, Copilot, and Gemini terminals)
 - **Buffer navigation**: `H` (previous), `L` (next)
-- **Terminal escape**: `<Esc>` closes floating terminals (except lazygit, claude, gemini, and copilot which use `<Ctrl-C>`). `<Ctrl-C>` also closes all floating terminals as a universal option.
+- **Terminal escape**: `<Esc>` closes floating terminals (except lazygit, claude, gemini, and copilot which use `<Ctrl-C>`). `<Ctrl-C>` also closes all floating terminals as a universal option. Special terminals (Claude, Copilot CLI, Gemini CLI) toggle with their respective commands and `<Ctrl-C>`.
 
 ## Plugin Configuration Patterns
 
@@ -78,7 +78,9 @@ The configuration includes sophisticated terminal handling:
 - Claude Code and Gemini CLI terminals use Ctrl+C to close (allowing Esc for internal navigation)
 - GitHub Copilot CLI terminals use Ctrl+C to close (allowing Esc for internal navigation)
 - **All floating terminals** now support Ctrl+C as a universal close option
-- ToggleTerm floating windows with numbered access
+- ToggleTerm floating windows with numbered access (`<leader>t1`, `<leader>t2`, `<leader>t3`)
+- **Smart last terminal tracking**: `<leader>tt` remembers and toggles the last used terminal (normal, Claude, Copilot CLI, or Gemini CLI)
+- **Terminal instance reuse**: Special terminals (Copilot CLI, Gemini CLI) reuse existing instances instead of creating new ones
 - Special handling for lazygit, claude, gemini, and copilot processes
 - Auto-close functionality for terminated processes
 

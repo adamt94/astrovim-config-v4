@@ -471,7 +471,7 @@ return {
           -- Set NVIM_LISTEN_ADDRESS environment variable for nvr support
           local nvim_server = vim.v.servername
           if nvim_server and nvim_server ~= "" then
-            vim.fn.setenv("NVIM_LISTEN_ADDRESS", nvim_server)
+            pcall(vim.fn.setenv, "NVIM_LISTEN_ADDRESS", nvim_server)
           end
         end
 

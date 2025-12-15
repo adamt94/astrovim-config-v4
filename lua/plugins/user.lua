@@ -465,6 +465,16 @@ return {
         -- Enter insert mode automatically
         vim.cmd "startinsert!"
 
+        -- Set up environment for lazygit to enable proper file editing
+        local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
+        if is_lazygit_float then
+          -- Set NVIM_LISTEN_ADDRESS environment variable for nvr support
+          local nvim_server = vim.v.servername
+          if nvim_server and nvim_server ~= "" then
+            vim.fn.setenv("NVIM_LISTEN_ADDRESS", nvim_server)
+          end
+        end
+
         -- Track normal terminals when they're opened
         if term.direction == "float" then
           -- Update last active terminal tracking for normal terminals
@@ -490,7 +500,6 @@ return {
         end
 
         -- Map <esc> to hide the terminal, but not for lazygit, claude, gemini, or copilot cli
-        local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
         local is_claude_float = term.direction == "float" and string.find(term.cmd or "", "claude")
         local is_gemini_float = term.direction == "float" and string.find(term.cmd or "", "gemini")
         local is_copilot_cli_float = term.direction == "float" and string.find(term.cmd or "", "copilot")
@@ -499,15 +508,6 @@ return {
             term.bufnr,
             "t",
             "<esc>",
-            string.format("<cmd>lua require('toggleterm').toggle(%d)<CR>", term.id),
-            { noremap = true, silent = true }
-          )
-        else
-          -- Map 'q' to hide the lazygit terminal
-          vim.api.nvim_buf_set_keymap(
-            term.bufnr,
-            "t",
-            "q",
             string.format("<cmd>lua require('toggleterm').toggle(%d)<CR>", term.id),
             { noremap = true, silent = true }
           )

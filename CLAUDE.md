@@ -42,7 +42,11 @@ This is an AstroNvim v4+ configuration repository - a customized Neovim setup bu
 - **Gemini CLI**: `<leader>ag`
 - **Floating terminals**: `<leader>t1`, `<leader>t2`, `<leader>t3`, `<leader>tt` (last used - includes Claude, Copilot, and Gemini terminals)
 - **Buffer navigation**: `H` (previous), `L` (next)
-- **Terminal escape**: `<Esc>` closes floating terminals (except lazygit, claude, gemini, and copilot which use `<Ctrl-Q>`). `<Ctrl-Q>` also closes all floating terminals as a universal option. Special terminals (Claude, Copilot CLI, Gemini CLI) toggle with their respective commands and `<Ctrl-Q>`.
+- **Terminal escape**: 
+  - `<Esc>` closes floating terminals (except lazygit, claude, gemini, and copilot)
+  - `<Ctrl-Q>` closes ALL floating terminals (universal option)
+  - **lazygit**: Use `<Ctrl-Q>` or `<Esc>` to close (not 'q' - this allows typing 'q' in commit messages)
+  - Special terminals (Claude, Copilot CLI, Gemini CLI) toggle with their respective commands and `<Ctrl-Q>`
 
 ## Plugin Configuration Patterns
 
@@ -83,6 +87,10 @@ The configuration includes sophisticated terminal handling:
 - **Terminal instance reuse**: Special terminals (Copilot CLI, Gemini CLI) reuse existing instances instead of creating new ones
 - Special handling for lazygit, claude, gemini, and copilot processes
 - Auto-close functionality for terminated processes
+- **lazygit file editing**: When pressing 'e' in lazygit to edit files:
+  - Requires `nvim-remote` (nvr) to be installed: `pip install neovim-remote`
+  - Files will open in the main Neovim editor window instead of the floating terminal
+  - Without nvr, files will open in a nested nvim instance within the terminal
 
 ## Important Notes
 

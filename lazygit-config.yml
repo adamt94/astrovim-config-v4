@@ -1,0 +1,27 @@
+# Lazygit configuration for AstroNvim integration
+# Copy this file to ~/.config/lazygit/config.yml
+# This configuration ensures proper behavior within Neovim floating terminal
+
+os:
+  # Edit command - will be set by toggleterm based on environment
+  # Using nvim-remote (nvr) when available, otherwise fallback to nvim
+  editPreset: 'nvim-remote'
+  openCommand: ''
+
+# Disable confirmation for simple operations
+confirmOnQuit: false
+
+gui:
+  # Show command log for debugging
+  showCommandLog: false
+  
+  # Border style
+  border: 'rounded'
+  
+  # Theme settings
+  theme:
+    activeBorderColor:
+      - cyan
+      - bold
+    inactiveBorderColor:
+      - white

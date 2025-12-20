@@ -32,3 +32,24 @@ git clone https://github.com/adamt94/astrovim-config-v4 ~/.config/nvim
 ```shell
 nvim
 ```
+
+## 📦 Optional Dependencies
+
+### Neovim Remote (for lazygit integration)
+
+To enable proper file editing within lazygit (opening files in the main Neovim editor instead of a nested instance):
+
+1. Install neovim-remote:
+```shell
+pip install neovim-remote
+```
+
+2. Copy the lazygit configuration:
+```shell
+mkdir -p ~/.config/lazygit
+cp lazygit-config.yml ~/.config/lazygit/config.yml
+```
+
+This allows lazygit to open files in the parent Neovim instance when you press 'e' on a file.
+
+**Note**: Without `neovim-remote`, files will open in a nested nvim instance within the lazygit terminal.

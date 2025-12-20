@@ -460,20 +460,20 @@ return {
       },
       -- Hide the terminal when it's closed
       close_on_exit = false,
+      -- Set environment variables for all terminals (especially for lazygit nvr support)
+      env = (function()
+        local nvim_server = vim.v.servername
+        if nvim_server and nvim_server ~= "" then
+          return {
+            NVIM = nvim_server, -- For neovim-remote (nvr) to connect back to parent Neovim
+          }
+        end
+        return {}
+      end)(),
       -- Function to run on opening a terminal
       on_open = function(term)
         -- Enter insert mode automatically
         vim.cmd "startinsert!"
-
-        -- Set up environment for lazygit to enable proper file editing
-        local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
-        if is_lazygit_float then
-          -- Set NVIM_LISTEN_ADDRESS environment variable for nvr support
-          local nvim_server = vim.v.servername
-          if nvim_server and nvim_server ~= "" then
-            pcall(vim.fn.setenv, "NVIM_LISTEN_ADDRESS", nvim_server)
-          end
-        end
 
         -- Track normal terminals when they're opened
         if term.direction == "float" then
@@ -500,6 +500,7 @@ return {
         end
 
         -- Map <esc> to hide the terminal, but not for lazygit, claude, gemini, or copilot cli
+        local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
         local is_claude_float = term.direction == "float" and string.find(term.cmd or "", "claude")
         local is_gemini_float = term.direction == "float" and string.find(term.cmd or "", "gemini")
         local is_copilot_cli_float = term.direction == "float" and string.find(term.cmd or "", "copilot")

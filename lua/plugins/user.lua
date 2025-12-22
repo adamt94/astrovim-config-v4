@@ -375,6 +375,9 @@ return {
             _G.special_terminals.copilot = Terminal:new {
               cmd = "copilot",
               direction = "float",
+              env = {
+                NVIM = vim.v.servername,
+              },
               float_opts = {
                 border = "curved",
                 width = math.floor(vim.o.columns * 0.9),
@@ -416,6 +419,9 @@ return {
             _G.special_terminals.gemini = Terminal:new {
               cmd = "gemini",
               direction = "float",
+              env = {
+                NVIM = vim.v.servername,
+              },
               float_opts = {
                 border = "curved",
               },
@@ -456,14 +462,11 @@ return {
     init = function()
       -- Set NVIM environment variable for neovim-remote (nvr) support
       -- This allows lazygit and other terminal tools to open files in the parent Neovim instance
-      vim.api.nvim_create_autocmd("VimEnter", {
-        callback = function()
-          local nvim_server = vim.v.servername
-          if nvim_server and nvim_server ~= "" then
-            vim.fn.setenv("NVIM", nvim_server)
-          end
-        end,
-      })
+      -- Using vim.env instead of vim.fn.setenv() ensures child processes inherit the variable
+      local nvim_server = vim.v.servername
+      if nvim_server and nvim_server ~= "" then
+        vim.env.NVIM = nvim_server
+      end
     end,
     opts = {
       -- Set floating terminal options

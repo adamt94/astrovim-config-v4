@@ -68,16 +68,16 @@ return {
         callback = function()
           local current_win = vim.api.nvim_get_current_win()
 
-          -- Check if we clicked outside a Claude Code, Gemini CLI, or Copilot CLI terminal
+          -- Check if we clicked outside a Claude Code or Gemini CLI terminal
           for _, winid in ipairs(vim.api.nvim_list_wins()) do
             if winid ~= current_win then
               local buf = vim.api.nvim_win_get_buf(winid)
               local buf_name = vim.api.nvim_buf_get_name(buf)
               local win_config = vim.api.nvim_win_get_config(winid)
 
-              -- Check if this is a floating Claude Code, Gemini CLI, or Copilot CLI terminal
+              -- Check if this is a floating Claude Code or Gemini CLI terminal
               if
-                (string.find(buf_name, "claude") or string.find(buf_name, "gemini") or string.find(buf_name, "copilot"))
+                (string.find(buf_name, "claude") or string.find(buf_name, "gemini"))
                 and win_config.relative ~= ""
               then
                 -- Close the floating window
@@ -114,127 +114,8 @@ return {
           vim.api.nvim_buf_set_keymap(0, "t", "<C-q>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
         end,
       })
-
-      -- Auto-close floating terminal when GitHub Copilot CLI process terminates
-      vim.api.nvim_create_autocmd("TermClose", {
-        pattern = "*copilot*",
-        callback = function(args)
-          local bufnr = args.buf
-          -- Find and close the window containing this buffer
-          for _, winid in ipairs(vim.api.nvim_list_wins()) do
-            if vim.api.nvim_win_get_buf(winid) == bufnr then
-              vim.api.nvim_win_close(winid, true)
-              break
-            end
-          end
-          -- Delete the buffer to prevent naming conflicts
-          vim.schedule(function()
-            if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_delete(bufnr, { force = true }) end
-          end)
-        end,
-      })
-
-      -- Override Ctrl+Q key in GitHub Copilot CLI terminals to close the terminal (allow Esc for navigation, Ctrl+C for terminal kill)
-      vim.api.nvim_create_autocmd("TermOpen", {
-        pattern = "*copilot*",
-        callback = function()
-          vim.api.nvim_buf_set_keymap(0, "t", "<C-q>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
-        end,
-      })
     end,
   },
-  {
-    "CopilotC-Nvim/CopilotChat.nvim",
-    branch = "main",
-    dependencies = {
-      { "zbirenbaum/copilot.lua" },
-      { "nvim-lua/plenary.nvim" },
-    },
-    config = function()
-      require("CopilotChat").setup {
-        debug = false,
-        window = {
-          layout = "float",
-          width = math.floor(vim.o.columns * 0.9),
-          height = math.floor(vim.o.lines * 0.9),
-          border = "rounded",
-          title = "Copilot Chat",
-        },
-        chat = {
-          welcome_message = "Hello! I'm GitHub Copilot. How can I help you today?",
-          loading_text = "Loading...",
-          question_sign = "",
-          answer_sign = "",
-          error_text = "Error: ",
-          separator = "---",
-        },
-        prompts = {
-          Explain = {
-            prompt = "/COPILOT_EXPLAIN Write an explanation for the active selection as paragraphs of text.",
-          },
-          Review = {
-            prompt = "/COPILOT_REVIEW Review the selected code.",
-          },
-          Fix = {
-            prompt = "/COPILOT_GENERATE There is a problem in this code. Rewrite the code to show it with the bug fixed.",
-          },
-          Optimize = {
-            prompt = "/COPILOT_GENERATE Optimize the selected code to improve performance and readability.",
-          },
-          Docs = {
-            prompt = "/COPILOT_GENERATE Please add documentation comment for the selection.",
-          },
-          Tests = {
-            prompt = "/COPILOT_GENERATE Please generate tests for my code.",
-          },
-          FixDiagnostic = {
-            prompt = "Please assist with the following diagnostic issue in file:",
-          },
-          Commit = {
-            prompt = "Write commit message for the change with commitizen convention. Make sure the title has maximum 50 characters and message is wrapped at 72 characters. Wrap the whole message in code block with language gitcommit.",
-          },
-          CommitStaged = {
-            prompt = "Write commit message for the change with commitizen convention. Make sure the title has maximum 50 characters and message is wrapped at 72 characters. Wrap the whole message in code block with language gitcommit.",
-          },
-        },
-        mappings = {
-          complete = {
-            detail = "Use @<Tab> or /<Tab> for options.",
-            insert = "<Tab>",
-          },
-          close = {
-            normal = "<Esc>",
-            insert = "<Esc>",
-          },
-          reset = {
-            normal = "<C-r>",
-            insert = "<C-r>",
-          },
-          submit_prompt = {
-            normal = "<CR>",
-            insert = "<C-CR>",
-          },
-          accept_diff = {
-            normal = "<C-y>",
-            insert = "<C-y>",
-          },
-          yank_diff = {
-            normal = "gy",
-          },
-          show_diff = {
-            normal = "gd",
-          },
-          show_info = {
-            normal = "gp",
-          },
-          show_context = {
-            normal = "gs",
-          },
-        },
-      }
-    end,
-  },
-
   -- == Examples of Overriding Plugins ==
 
   -- customize alpha options
@@ -331,8 +212,6 @@ return {
           local last = _G.last_active_terminal
           if last.type == "normal" then
             require("toggleterm").toggle(last.id_or_instance, nil, nil, "float")
-          elseif last.type == "copilot" and _G.special_terminals.copilot then
-            _G.special_terminals.copilot:toggle()
           elseif last.type == "gemini" and _G.special_terminals.gemini then
             _G.special_terminals.gemini:toggle()
           elseif last.type == "claude" then
@@ -346,8 +225,13 @@ return {
         desc = "Toggle last floating terminal",
       }
 
-      -- Add AI Assistant keybindings (moved from <leader>c to avoid conflicts with buffer close)
-      opts.mappings.n["<leader>ax"] = { "<cmd>CopilotChat<cr>", desc = "Open Copilot Chat" }
+      -- Add AI Assistant keybindings
+      -- CopilotChat uses community keybindings (<leader>P prefix)
+      -- Add quick access binding for backward compatibility
+      opts.mappings.n["<leader>ax"] = { "<cmd>CopilotChatToggle<cr>", desc = "Toggle Copilot Chat" }
+
+      -- OpenCode uses community keybindings (<leader>O prefix)
+      -- Main keybindings: <leader>Ot (toggle), <leader>Oa (ask), <leader>Oe (explain)
 
       -- Add Claude Code keybindings
       opts.mappings.n["<leader>v"] = {
@@ -366,51 +250,7 @@ return {
       }
       opts.mappings.n["<leader>ar"] = { "<cmd>ClaudeCodeResume<cr>", desc = "Claude Code Resume" }
 
-      -- GitHub Copilot CLI mapping - reuse existing terminal instance
-      opts.mappings.n["<leader>ap"] = {
-        function()
-          if not _G.special_terminals.copilot then
-            -- Create a floating terminal for GitHub Copilot CLI
-            local Terminal = require("toggleterm.terminal").Terminal
-            _G.special_terminals.copilot = Terminal:new {
-              cmd = "copilot",
-              direction = "float",
-              env = {
-                NVIM = vim.v.servername,
-              },
-              float_opts = {
-                border = "curved",
-                width = math.floor(vim.o.columns * 0.9),
-                height = math.floor(vim.o.lines * 0.9),
-              },
-              on_open = function(term)
-                track_terminal("copilot", term)
-                vim.api.nvim_buf_set_keymap(
-                  term.bufnr,
-                  "t",
-                  "<C-q>",
-                  "<cmd>lua _G.special_terminals.copilot:toggle()<CR>",
-                  { noremap = true, silent = true }
-                )
-              end,
-              on_exit = function(term)
-                -- Clean up the terminal instance when process exits
-                vim.schedule(function()
-                  if vim.api.nvim_buf_is_valid(term.bufnr) then
-                    vim.api.nvim_buf_delete(term.bufnr, { force = true })
-                  end
-                  _G.special_terminals.copilot = nil
-                end)
-              end,
-            }
-          end
-          _G.special_terminals.copilot:toggle()
-          track_terminal("copilot", _G.special_terminals.copilot)
-        end,
-        desc = "Copilot CLI",
-      }
-
-      -- Add Gemini CLI keybindings - remove duplicate, keep only <leader>ag
+      -- Add Gemini CLI keybindings
       opts.mappings.n["<leader>ag"] = {
         function()
           if not _G.special_terminals.gemini then
@@ -488,7 +328,6 @@ return {
               string.find(term.cmd or "", "lazygit")
               or string.find(term.cmd or "", "claude")
               or string.find(term.cmd or "", "gemini")
-              or string.find(term.cmd or "", "copilot")
             )
           then
             _G.last_active_terminal = { type = "normal", id_or_instance = term.id }
@@ -504,12 +343,11 @@ return {
           )
         end
 
-        -- Map <esc> to hide the terminal, but not for lazygit, claude, gemini, or copilot cli
+        -- Map <esc> to hide the terminal, but not for lazygit, claude, or gemini
         local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
         local is_claude_float = term.direction == "float" and string.find(term.cmd or "", "claude")
         local is_gemini_float = term.direction == "float" and string.find(term.cmd or "", "gemini")
-        local is_copilot_cli_float = term.direction == "float" and string.find(term.cmd or "", "copilot")
-        if not is_lazygit_float and not is_claude_float and not is_gemini_float and not is_copilot_cli_float then
+        if not is_lazygit_float and not is_claude_float and not is_gemini_float then
           vim.api.nvim_buf_set_keymap(
             term.bufnr,
             "t",

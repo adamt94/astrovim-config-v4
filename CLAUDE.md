@@ -21,8 +21,8 @@ This is an AstroNvim v4+ configuration repository - a customized Neovim setup bu
 
 ### Important Integrations
 - **Claude Code**: Configured as a floating window with custom keybindings (`<leader>v` to open, `<leader>av` for chat)
-- **GitHub Copilot Chat**: Floating window interface with custom prompts and keybindings (`<leader>ax`)
-- **GitHub Copilot CLI**: Terminal interface for command-line GitHub Copilot (`<leader>ap`)
+- **GitHub Copilot Chat**: Floating window interface managed by AstroNvim community package (`<leader>P` prefix for full features, `<leader>ax` for quick toggle)
+- **OpenCode**: AI assistant plugin from AstroNvim community (`<leader>O` prefix - `<leader>Ot` to toggle, `<leader>Oa` to ask, `<leader>Oe` to explain)
 - **Gemini CLI**: Terminal interface for Google Gemini (`<leader>ag`)
 - **ToggleTerm**: Multi-terminal support with numbered floating terminals (`<leader>t1`, `<leader>t2`, etc.)
 
@@ -37,16 +37,16 @@ This is an AstroNvim v4+ configuration repository - a customized Neovim setup bu
 - **Leader key**: `<space>`
 - **Local leader**: `,`
 - **Claude Code**: `<leader>v` (open), `<leader>av` (chat), `<leader>ar` (resume)
-- **Copilot Chat**: `<leader>ax`
-- **Copilot CLI**: `<leader>ap`
+- **Copilot Chat**: `<leader>ax` (quick toggle), `<leader>P` prefix for full features (e.g., `<leader>Pt` toggle, `<leader>Po` open, `<leader>Pq` quick chat)
+- **OpenCode**: `<leader>O` prefix - `<leader>Ot` (toggle), `<leader>Oa` (ask about this), `<leader>Oe` (explain), `<leader>On` (new session)
 - **Gemini CLI**: `<leader>ag`
-- **Floating terminals**: `<leader>t1`, `<leader>t2`, `<leader>t3`, `<leader>tt` (last used - includes Claude, Copilot, and Gemini terminals)
+- **Floating terminals**: `<leader>t1`, `<leader>t2`, `<leader>t3`, `<leader>tt` (last used - includes Claude and Gemini terminals)
 - **Buffer navigation**: `H` (previous), `L` (next)
 - **Terminal escape**: 
-  - `<Esc>` closes floating terminals (except lazygit, claude, gemini, and copilot)
+  - `<Esc>` closes floating terminals (except lazygit, claude, and gemini)
   - `<Ctrl-Q>` closes ALL floating terminals (universal option)
   - **lazygit**: Use `<Ctrl-Q>` or `<Esc>` to close (not 'q' - this allows typing 'q' in commit messages)
-  - Special terminals (Claude, Copilot CLI, Gemini CLI) toggle with their respective commands and `<Ctrl-Q>`
+  - Special terminals (Claude, Gemini CLI) toggle with their respective commands and `<Ctrl-Q>`
 
 ## Plugin Configuration Patterns
 
@@ -80,12 +80,11 @@ New plugins should be added to `lua/plugins/user.lua` following the existing pat
 
 The configuration includes sophisticated terminal handling:
 - Claude Code and Gemini CLI terminals use Ctrl+Q to close (allowing Esc for internal navigation, Ctrl+C for terminal kill)
-- GitHub Copilot CLI terminals use Ctrl+Q to close (allowing Esc for internal navigation, Ctrl+C for terminal kill)
 - **All floating terminals** now support Ctrl+Q as a universal close option
 - ToggleTerm floating windows with numbered access (`<leader>t1`, `<leader>t2`, `<leader>t3`)
-- **Smart last terminal tracking**: `<leader>tt` remembers and toggles the last used terminal (normal, Claude, Copilot CLI, or Gemini CLI)
-- **Terminal instance reuse**: Special terminals (Copilot CLI, Gemini CLI) reuse existing instances instead of creating new ones
-- Special handling for lazygit, claude, gemini, and copilot processes
+- **Smart last terminal tracking**: `<leader>tt` remembers and toggles the last used terminal (normal, Claude, or Gemini CLI)
+- **Terminal instance reuse**: Special terminals (Gemini CLI) reuse existing instances instead of creating new ones
+- Special handling for lazygit, claude, and gemini processes
 - Auto-close functionality for terminated processes
 - **lazygit file editing**: When pressing 'e' in lazygit to edit files:
   - Requires `nvim-remote` (nvr) to be installed: `pip install neovim-remote`
@@ -99,4 +98,4 @@ The configuration includes sophisticated terminal handling:
 - The configuration includes custom ASCII art for the dashboard
 - Several default plugins are disabled (better-escape.nvim)
 - Custom autopairs rules for LaTeX files
-- **GitHub Copilot CLI**: Uses the `copilot` command (ensure it's installed and in PATH)
+- **AI Plugins**: Uses AstroNvim community packages where available (CopilotChat, OpenCode), with custom plugins for Claude Code and Gemini CLI

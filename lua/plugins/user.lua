@@ -62,22 +62,23 @@ return {
         end,
       })
 
-      -- Close Claude Code and Gemini CLI floating terminals when clicking outside
+      -- Close Claude Code, Gemini CLI, OpenCode, and Copilot CLI floating terminals when clicking outside
       vim.api.nvim_create_autocmd("WinEnter", {
         pattern = "*",
         callback = function()
           local current_win = vim.api.nvim_get_current_win()
 
-          -- Check if we clicked outside a Claude Code or Gemini CLI terminal
+          -- Check if we clicked outside a special terminal
           for _, winid in ipairs(vim.api.nvim_list_wins()) do
             if winid ~= current_win then
               local buf = vim.api.nvim_win_get_buf(winid)
               local buf_name = vim.api.nvim_buf_get_name(buf)
               local win_config = vim.api.nvim_win_get_config(winid)
 
-              -- Check if this is a floating Claude Code or Gemini CLI terminal
+              -- Check if this is a floating special terminal
               if
-                (string.find(buf_name, "claude") or string.find(buf_name, "gemini"))
+                (string.find(buf_name, "claude") or string.find(buf_name, "gemini") 
+                  or string.find(buf_name, "opencode") or string.find(buf_name, "copilot"))
                 and win_config.relative ~= ""
               then
                 -- Close the floating window
@@ -110,6 +111,60 @@ return {
       -- Override Ctrl+Q key in Gemini CLI terminals to close the terminal (allow Esc for navigation, Ctrl+C for terminal kill)
       vim.api.nvim_create_autocmd("TermOpen", {
         pattern = "*gemini*",
+        callback = function()
+          vim.api.nvim_buf_set_keymap(0, "t", "<C-q>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
+        end,
+      })
+
+      -- Auto-close floating terminal when OpenCode process terminates
+      vim.api.nvim_create_autocmd("TermClose", {
+        pattern = "*opencode*",
+        callback = function(args)
+          local bufnr = args.buf
+          -- Find and close the window containing this buffer
+          for _, winid in ipairs(vim.api.nvim_list_wins()) do
+            if vim.api.nvim_win_get_buf(winid) == bufnr then
+              vim.api.nvim_win_close(winid, true)
+              break
+            end
+          end
+          -- Delete the buffer to prevent naming conflicts
+          vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_delete(bufnr, { force = true }) end
+          end)
+        end,
+      })
+
+      -- Override Ctrl+Q key in OpenCode terminals to close the terminal
+      vim.api.nvim_create_autocmd("TermOpen", {
+        pattern = "*opencode*",
+        callback = function()
+          vim.api.nvim_buf_set_keymap(0, "t", "<C-q>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
+        end,
+      })
+
+      -- Auto-close floating terminal when Copilot CLI process terminates
+      vim.api.nvim_create_autocmd("TermClose", {
+        pattern = "*copilot*",
+        callback = function(args)
+          local bufnr = args.buf
+          -- Find and close the window containing this buffer
+          for _, winid in ipairs(vim.api.nvim_list_wins()) do
+            if vim.api.nvim_win_get_buf(winid) == bufnr then
+              vim.api.nvim_win_close(winid, true)
+              break
+            end
+          end
+          -- Delete the buffer to prevent naming conflicts
+          vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(bufnr) then vim.api.nvim_buf_delete(bufnr, { force = true }) end
+          end)
+        end,
+      })
+
+      -- Override Ctrl+Q key in Copilot CLI terminals to close the terminal
+      vim.api.nvim_create_autocmd("TermOpen", {
+        pattern = "*copilot*",
         callback = function()
           vim.api.nvim_buf_set_keymap(0, "t", "<C-q>", "<C-\\><C-n>:close<CR>", { noremap = true, silent = true })
         end,
@@ -214,6 +269,10 @@ return {
             require("toggleterm").toggle(last.id_or_instance, nil, nil, "float")
           elseif last.type == "gemini" and _G.special_terminals.gemini then
             _G.special_terminals.gemini:toggle()
+          elseif last.type == "opencode" and _G.special_terminals.opencode then
+            _G.special_terminals.opencode:toggle()
+          elseif last.type == "copilot" and _G.special_terminals.copilot then
+            _G.special_terminals.copilot:toggle()
           elseif last.type == "claude" then
             vim.cmd "ClaudeCode"
           else
@@ -226,12 +285,91 @@ return {
       }
 
       -- Add AI Assistant keybindings
-      -- CopilotChat uses community keybindings (<leader>P prefix)
-      -- Add quick access binding for backward compatibility
-      opts.mappings.n["<leader>ax"] = { "<cmd>CopilotChatToggle<cr>", desc = "Toggle Copilot Chat" }
-
       -- OpenCode uses community keybindings (<leader>O prefix)
       -- Main keybindings: <leader>Ot (toggle), <leader>Oa (ask), <leader>Oe (explain)
+      -- Add floating terminal option for OpenCode
+      opts.mappings.n["<leader>aO"] = {
+        function()
+          if not _G.special_terminals.opencode then
+            -- Create a floating terminal for OpenCode
+            local Terminal = require("toggleterm.terminal").Terminal
+            _G.special_terminals.opencode = Terminal:new {
+              cmd = "opencode",
+              direction = "float",
+              env = {
+                NVIM = vim.v.servername,
+              },
+              float_opts = {
+                border = "curved",
+              },
+              on_open = function(term)
+                track_terminal("opencode", term)
+                vim.api.nvim_buf_set_keymap(
+                  term.bufnr,
+                  "t",
+                  "<C-q>",
+                  "<cmd>lua _G.special_terminals.opencode:toggle()<CR>",
+                  { noremap = true, silent = true }
+                )
+              end,
+              on_exit = function(term)
+                -- Clean up the terminal instance when process exits
+                vim.schedule(function()
+                  if vim.api.nvim_buf_is_valid(term.bufnr) then
+                    vim.api.nvim_buf_delete(term.bufnr, { force = true })
+                  end
+                  _G.special_terminals.opencode = nil
+                end)
+              end,
+            }
+          end
+          _G.special_terminals.opencode:toggle()
+          track_terminal("opencode", _G.special_terminals.opencode)
+        end,
+        desc = "OpenCode CLI (floating)",
+      }
+
+      -- Add Copilot CLI keybindings
+      opts.mappings.n["<leader>ac"] = {
+        function()
+          if not _G.special_terminals.copilot then
+            -- Create a floating terminal for Copilot CLI
+            local Terminal = require("toggleterm.terminal").Terminal
+            _G.special_terminals.copilot = Terminal:new {
+              cmd = "github-copilot-cli",
+              direction = "float",
+              env = {
+                NVIM = vim.v.servername,
+              },
+              float_opts = {
+                border = "curved",
+              },
+              on_open = function(term)
+                track_terminal("copilot", term)
+                vim.api.nvim_buf_set_keymap(
+                  term.bufnr,
+                  "t",
+                  "<C-q>",
+                  "<cmd>lua _G.special_terminals.copilot:toggle()<CR>",
+                  { noremap = true, silent = true }
+                )
+              end,
+              on_exit = function(term)
+                -- Clean up the terminal instance when process exits
+                vim.schedule(function()
+                  if vim.api.nvim_buf_is_valid(term.bufnr) then
+                    vim.api.nvim_buf_delete(term.bufnr, { force = true })
+                  end
+                  _G.special_terminals.copilot = nil
+                end)
+              end,
+            }
+          end
+          _G.special_terminals.copilot:toggle()
+          track_terminal("copilot", _G.special_terminals.copilot)
+        end,
+        desc = "Copilot CLI",
+      }
 
       -- Add Claude Code keybindings
       opts.mappings.n["<leader>v"] = {
@@ -328,6 +466,8 @@ return {
               string.find(term.cmd or "", "lazygit")
               or string.find(term.cmd or "", "claude")
               or string.find(term.cmd or "", "gemini")
+              or string.find(term.cmd or "", "opencode")
+              or string.find(term.cmd or "", "copilot")
             )
           then
             _G.last_active_terminal = { type = "normal", id_or_instance = term.id }
@@ -343,11 +483,13 @@ return {
           )
         end
 
-        -- Map <esc> to hide the terminal, but not for lazygit, claude, or gemini
+        -- Map <esc> to hide the terminal, but not for lazygit, claude, gemini, opencode, or copilot
         local is_lazygit_float = term.direction == "float" and string.find(term.cmd or "", "lazygit")
         local is_claude_float = term.direction == "float" and string.find(term.cmd or "", "claude")
         local is_gemini_float = term.direction == "float" and string.find(term.cmd or "", "gemini")
-        if not is_lazygit_float and not is_claude_float and not is_gemini_float then
+        local is_opencode_float = term.direction == "float" and string.find(term.cmd or "", "opencode")
+        local is_copilot_float = term.direction == "float" and string.find(term.cmd or "", "copilot")
+        if not is_lazygit_float and not is_claude_float and not is_gemini_float and not is_opencode_float and not is_copilot_float then
           vim.api.nvim_buf_set_keymap(
             term.bufnr,
             "t",

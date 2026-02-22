@@ -1,5 +1,7 @@
 # AstroNvim Template
 
+test
+
 **NOTE:** This is for AstroNvim v4+
 
 A template for getting started with [AstroNvim](https://github.com/AstroNvim/AstroNvim)
@@ -40,11 +42,13 @@ nvim
 To enable proper file editing within lazygit (opening files in the main Neovim editor instead of a nested instance):
 
 1. Install neovim-remote:
+
 ```shell
 pip install neovim-remote
 ```
 
 2. Copy the lazygit configuration:
+
 ```shell
 mkdir -p ~/.config/lazygit
 cp lazygit-config.yml ~/.config/lazygit/config.yml

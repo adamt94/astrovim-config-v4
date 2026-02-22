@@ -1,0 +1,26 @@
+#!/bin/bash
+# Edit a file in the parent Neovim instance when running inside Neovim (e.g. from lazygit).
+# Falls back to opening a new Neovim instance if not inside Neovim.
+# Usage: nvim-edit <filename> [line]
+
+FILENAME="$1"
+LINE="${2:-}"
+
+if [ -n "$NVIM" ]; then
+  # Open the file in the parent Neovim instance in a new tab
+  nvim --server "$NVIM" --remote-tab "$FILENAME"
+  # Jump to the specified line (if provided) then close floating windows
+  # so the user can actually see the opened file (closes the lazygit terminal)
+  if [ -n "$LINE" ] && [ "$LINE" -gt 0 ] 2>/dev/null; then
+    nvim --server "$NVIM" --remote-send "<Esc>${LINE}G:lua for _,w in ipairs(vim.api.nvim_list_wins()) do local ok,c=pcall(vim.api.nvim_win_get_config,w); if ok and c.relative~='' then pcall(vim.api.nvim_win_close,w,true) end end<CR>"
+  else
+    nvim --server "$NVIM" --remote-send "<Esc>:lua for _,w in ipairs(vim.api.nvim_list_wins()) do local ok,c=pcall(vim.api.nvim_win_get_config,w); if ok and c.relative~='' then pcall(vim.api.nvim_win_close,w,true) end end<CR>"
+  fi
+else
+  # Fall back to opening a new Neovim instance
+  if [ -n "$LINE" ] && [ "$LINE" -gt 0 ] 2>/dev/null; then
+    nvim "+${LINE}" "$FILENAME"
+  else
+    nvim "$FILENAME"
+  fi
+fi

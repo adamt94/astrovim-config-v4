@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:astronvim.github.io)"
+      "WebFetch(domain:astronvim.github.io)",
+      "Bash(chmod +x:*)",
+      "Bash(echo:*)",
+      "Bash(grep:*)",
+      "Bash(lazygit:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

@@ -1,0 +1,5 @@
+os:
+  edit: '"$HOME/.config/nvim/scripts/nvim-edit" "{{filename}}"'
+  editAtLine: '"$HOME/.config/nvim/scripts/nvim-edit" "{{filename}}" {{line}}'
+  editAtLineAndWait: '"$HOME/.config/nvim/scripts/nvim-edit" "{{filename}}" {{line}}'
+  suspendOnEdit: false

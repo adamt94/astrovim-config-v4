@@ -336,7 +336,7 @@ return {
             -- Create a floating terminal for Copilot CLI
             local Terminal = require("toggleterm.terminal").Terminal
             _G.special_terminals.copilot = Terminal:new {
-              cmd = "github-copilot-cli",
+              cmd = "copilot",
               direction = "float",
               env = {
                 NVIM = vim.v.servername,

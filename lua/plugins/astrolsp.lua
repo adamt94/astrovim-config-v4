@@ -1,3 +1,5 @@
+local util = require "lspconfig.util"
+
 -- AstroLSP allows you to customize the features in AstroNvim's LSP configuration engine
 -- Configuration documentation can be found with `:h astrolsp`
 -- NOTE: We highly recommend setting up the Lua Language Server (`:LspInstall lua_ls`)
@@ -43,7 +45,26 @@ return {
     -- customize language server configuration options passed to `lspconfig`
     ---@diagnostic disable: missing-fields
     config = {
-      -- clangd = { capabilities = { offsetEncoding = "utf-8" } },
+      denols = {
+        root_dir = util.root_pattern("deno.json", "deno.jsonc"),
+        single_file_support = false,
+      },
+      eslint = {
+        root_dir = util.root_pattern(
+          ".eslintrc",
+          ".eslintrc.js",
+          ".eslintrc.cjs",
+          ".eslintrc.yaml",
+          ".eslintrc.yml",
+          ".eslintrc.json",
+          "package.json",
+          ".git"
+        ),
+      },
+      vtsls = {
+        root_dir = util.root_pattern("package.json", "jsconfig.json", "tsconfig.json", ".git"),
+        single_file_support = false,
+      },
     },
     -- customize how language servers are attached
     handlers = {
@@ -51,6 +72,7 @@ return {
       -- function(server, opts) require("lspconfig")[server].setup(opts) end
 
       -- the key is the server that is being setup with `lspconfig`
+      denols = false,
       -- rust_analyzer = false, -- setting a handler to false will disable the set up of that language server
       -- pyright = function(_, opts) require("lspconfig").pyright.setup(opts) end -- or a custom handler function can be passed
     },

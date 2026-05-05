@@ -6,7 +6,8 @@
       "Bash(echo:*)",
       "Bash(grep:*)",
       "Bash(lazygit:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "WebSearch"
     ],
     "deny": []
   }

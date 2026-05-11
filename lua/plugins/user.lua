@@ -28,6 +28,17 @@ return {
           }, "\n"),
         },
       },
+      picker = {
+        sources = {
+          lsp_declarations = { jump = { close = true } },
+          lsp_definitions = { jump = { close = true } },
+          lsp_implementations = { jump = { close = true } },
+          lsp_incoming_calls = { jump = { close = true } },
+          lsp_outgoing_calls = { jump = { close = true } },
+          lsp_references = { jump = { close = true } },
+          lsp_type_definitions = { jump = { close = true } },
+        },
+      },
     },
   },
   { "max397574/better-escape.nvim", enabled = false },
